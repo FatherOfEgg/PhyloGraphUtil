@@ -68,11 +68,10 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             std::string s;
 
             f.get(c);
-            s += c;
             while (f.get(c) && c != '"') {
                 s += c;
             }
-            s += '"';
+            f.get(c);
 
             tokens.push_back({TokenType::ATTRIBUTE_STRING, s});
         } else if (isdigit(c) || c == '-' || c == '.') {
@@ -240,7 +239,9 @@ void GMLGraph::print() const {
         std::string value;
 
         if (pair.second->getType() == AttributeType::STRING) {
-            value = dynamic_cast<AttributeString *>(pair.second.get())->getValue();
+            value += "\"";
+            value += dynamic_cast<AttributeString *>(pair.second.get())->getValue();
+            value += "\"";
         } else if (pair.second->getType() == AttributeType::NUMBER) {
             value = std::to_string(dynamic_cast<AttributeNumber *>(pair.second.get())->getValue());
         }
@@ -251,7 +252,7 @@ void GMLGraph::print() const {
 
     std::cout << "Nodes:" << std::endl;
     for (const auto &n : mNodes) {
-        std::cout << n.id << ", " << n.label << std::endl;
+        std::cout << n.id << ", \"" << n.label << "\"" << std::endl;
     }
     std::cout << std::endl;
 
