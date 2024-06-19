@@ -1,12 +1,12 @@
 #include "gml.h"
 #include "attribute.h"
+#include "graph.h"
 
 #include <cctype>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 enum class TokenType {
@@ -91,8 +91,8 @@ static std::vector<Token> tokenize(std::ifstream &f) {
     return tokens;
 }
 
-static AttributeList parseAttributeList(size_t &i, const std::vector<Token> &tokens) {
-    AttributeList attrList;
+static AttributeMap parseAttributeList(size_t &i, const std::vector<Token> &tokens) {
+    AttributeMap attrList;
     i++;
 
     while (tokens[i].type != TokenType::CLOSE_BRACKET) {
@@ -101,11 +101,11 @@ static AttributeList parseAttributeList(size_t &i, const std::vector<Token> &tok
             i++;
 
             if (tokens[i].type == TokenType::OPEN_BRACKET) {
-                attrList.add(attributeName, std::make_shared<AttributeList>(parseAttributeList(i, tokens)));
+                attrList.add(attributeName, std::make_unique<AttributeMap>(parseAttributeList(i, tokens)));
             } else if (tokens[i].type == TokenType::ATTRIBUTE_STRING) {
-                attrList.add(attributeName, std::make_shared<AttributeString>(AttributeString(tokens[i].value)));
+                attrList.add(attributeName, std::make_unique<AttributeString>(tokens[i].value));
             } else if (tokens[i].type == TokenType::ATTRIBUTE_NUMBER) {
-                attrList.add(attributeName, std::make_shared<AttributeNumber>(AttributeNumber(std::stod(tokens[i].value))));
+                attrList.add(attributeName, std::make_unique<AttributeNumber>(std::stod(tokens[i].value)));
             }
         }
 
@@ -141,11 +141,11 @@ static bool parse(GMLGraph &g, const std::vector<Token> &tokens) {
                     } else if (attributeName == "label") {
                         n.label = tokens[i].value;
                     } else if (tokens[i].type == TokenType::OPEN_BRACKET) {
-                        n.attributes[attributeName] = std::make_shared<AttributeList>(parseAttributeList(i, tokens));
+                        n.attributes.add(attributeName, std::make_unique<AttributeMap>(parseAttributeList(i, tokens)));
                     } else if (tokens[i].type == TokenType::ATTRIBUTE_STRING) {
-                        n.attributes[attributeName] = std::make_shared<AttributeString>(AttributeString(tokens[i].value));
+                        n.attributes.add(attributeName, std::make_unique<AttributeString>(tokens[i].value));
                     } else if (tokens[i].type == TokenType::ATTRIBUTE_NUMBER) {
-                        n.attributes[attributeName] = std::make_shared<AttributeNumber>(AttributeNumber(std::stod(tokens[i].value)));
+                        n.attributes.add(attributeName, std::make_unique<AttributeNumber>(std::stod(tokens[i].value)));
                     }
                 }
 
@@ -189,14 +189,27 @@ static bool parse(GMLGraph &g, const std::vector<Token> &tokens) {
             i++;
 
             if (tokens[i].type == TokenType::ATTRIBUTE_STRING) {
-                g.attributes[attributeName] = std::make_shared<AttributeString>(AttributeString(tokens[i].value));
+                g.addAttribute(attributeName, std::make_unique<AttributeString>(tokens[i].value));
             } else if (tokens[i].type == TokenType::ATTRIBUTE_NUMBER) {
-                g.attributes[attributeName] = std::make_shared<AttributeNumber>(AttributeNumber(std::stod(tokens[i].value)));
+                g.addAttribute(attributeName, std::make_unique<AttributeNumber>(std::stod(tokens[i].value)));
             }
         }
     }
 
     return true;
+}
+
+GMLGraph::GMLGraph() {}
+
+GMLGraph::GMLGraph(const Graph &other)
+: Graph(other) {}
+
+GMLGraph &GMLGraph::operator=(const Graph &other) {
+    if (this != &other) {
+        Graph::operator=(other);
+    }
+
+    return *this;
 }
 
 void GMLGraph::open(const std::string &file) {
@@ -214,51 +227,36 @@ void GMLGraph::open(const std::string &file) {
         std::cerr << "'" << file << "' is not a valid GML file." << std::endl;
         std::exit(1);
     }
+}
 
-    return;
-
-    for (const auto &t : tokens) {
-        std::string type;
-
-        if (t.type == TokenType::OPEN_BRACKET) {
-            type = "OPEN_BRACKET";
-        } else if (t.type == TokenType::CLOSE_BRACKET) {
-            type = "CLOSE_BRACKET";
-        } else if (t.type == TokenType::GRAPH) {
-            type = "GRAPH";
-        } else if (t.type == TokenType::NODE) {
-            type = "NODE";
-        } else if (t.type == TokenType::EDGE) {
-            type = "EDGE";
-        } else if (t.type == TokenType::ATTRIBUTE_NAME) {
-            type = "ATTRIBUTE_NAME";
-        } else if (t.type == TokenType::ATTRIBUTE_STRING) {
-            type = "ATTRIBUTE_STRING";
-        } else if (t.type == TokenType::ATTRIBUTE_NUMBER) {
-            type = "ATTRIBUTE_NUMBER";
-        }
-
-        std::cout << type << ", '" << t.value << "'" << std::endl;
-    }
+void GMLGraph::save(const std::string &filename) const {
+    std::cout << "Save as GML" << std::endl;
 }
 
 void GMLGraph::print() const {
-    auto it = attributes.find("label");
-    if (it != attributes.end()) {
-        if (it->second->getType() == AttributeType::STRING) {
-            auto label = *dynamic_cast<AttributeString *>(it->second.get());
-            std::cout << "Label: " << label.value << std::endl;
+    std::cout << "Graph attributes:" << std::endl;
+    for (auto &pair : mAttributes) {
+        std::string attributeName = pair.first;
+        std::string value;
+
+        if (pair.second->getType() == AttributeType::STRING) {
+            value = dynamic_cast<AttributeString *>(pair.second.get())->getValue();
+        } else if (pair.second->getType() == AttributeType::NUMBER) {
+            value = std::to_string(dynamic_cast<AttributeNumber *>(pair.second.get())->getValue());
         }
+
+        std::cout << attributeName << ": " << value << std::endl;
     }
+    std::cout << std::endl;
 
     std::cout << "Nodes:" << std::endl;
-    for (const auto &n : nodes) {
+    for (const auto &n : mNodes) {
         std::cout << n.id << ", " << n.label << std::endl;
     }
     std::cout << std::endl;
 
     std::cout << "Edges:" << std::endl;
-    for (const auto &e : edges) {
+    for (const auto &e : mEdges) {
         std::cout << e.first << ": ";
 
         for (const auto &x : e.second) {
