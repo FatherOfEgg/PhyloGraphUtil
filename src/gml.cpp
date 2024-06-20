@@ -2,6 +2,7 @@
 #include "attribute.h"
 #include "graph.h"
 
+#include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <iostream>
@@ -209,6 +210,45 @@ GMLGraph &GMLGraph::operator=(const Graph &other) {
     }
 
     return *this;
+}
+
+void GMLGraph::addEdge(Edge &e) {
+    Graph::addEdge(e);
+
+    auto it = mAttributes.find("directed");
+    if (it != mAttributes.end()
+    &&  dynamic_cast<AttributeNumber *>(it->second.get())->getValue() == 0.0) {
+        auto edgeIt = std::find_if(
+            mEdges[e.target].begin(),
+            mEdges[e.target].end(),
+            [e](const Edge &edge) {
+                return edge.target == e.source;
+            }
+        );
+
+        if (edgeIt == mEdges[e.target].end()) {
+            mEdges[e.target].emplace_back(Edge{e.target, e.source, e.label, e.weight, e.length});
+        }
+    }
+}
+
+void GMLGraph::addEdge(const std::string &source, const std::string &target, const std::string &label, double weight, double length) {
+    Graph::addEdge(source, target, label, weight, length);
+
+    auto it = mAttributes.find("directed");
+    if (it != mAttributes.end()
+    &&  dynamic_cast<AttributeNumber *>(it->second.get())->getValue() == 0.0) {
+        auto edgeIt = std::find_if(
+            mEdges[target].begin(),
+            mEdges[target].end(),
+            [source](const Edge &edge) {
+                return edge.target == source;
+        });
+
+        if (edgeIt == mEdges[target].end()) {
+            mEdges[target].emplace_back(Edge{target, source, label, weight, length});
+        }
+    }
 }
 
 void GMLGraph::open(const std::string &file) {
