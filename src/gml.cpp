@@ -269,7 +269,61 @@ void GMLGraph::open(const std::string &file) {
 }
 
 void GMLGraph::save(const std::string &filename) const {
-    std::cout << "Save as GML" << std::endl;
+    std::ofstream f(filename);
+
+    if (!f) {
+        std::cerr << "Failed to save to '" << filename << "'."<< std::endl;
+        std::exit(1);
+    }
+
+    std::string indent = "    ";
+
+    f << "graph [" << std::endl;
+
+    for (const auto &pair : mAttributes) {
+        std::string attribute = pair.first + " ";
+
+        if (pair.second->getType() == AttributeType::STRING) {
+            attribute += "\"";
+            attribute += dynamic_cast<AttributeString *>(pair.second.get())->getValue();
+            attribute += "\"";
+        } else if (pair.second->getType() == AttributeType::NUMBER) {
+            attribute = std::to_string(dynamic_cast<AttributeNumber *>(pair.second.get())->getValue());
+        }
+
+        f << indent << attribute << std::endl;
+    }
+
+    for (const auto &n : mNodes) {
+        f << indent << "node [" << std::endl;
+        indent += "    ";
+
+        f << indent << "id " << n.id << std::endl;
+        f << indent << "label \"" << n.label << "\"" << std::endl;
+
+        indent = indent.substr(0, indent.length() - 4);
+        f << indent << "]" << std::endl;
+    }
+
+    for (const auto &e : mEdges) {
+        std::string source = e.first;
+
+        for (const auto &adj : e.second) {
+            f << indent << "edge [" << std::endl;
+            indent += "    ";
+
+            f << indent << "source " << source << std::endl;
+            f << indent << "target " << adj.target << std::endl;
+            f << indent << "label \"" << adj.label << "\"" << std::endl;
+
+            indent = indent.substr(0, indent.length() - 4);
+            f << indent << "]" << std::endl;
+        }
+    }
+
+    f << "]";
+
+    f.close();
 }
 
 void GMLGraph::print() const {
