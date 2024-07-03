@@ -61,3 +61,13 @@ unsigned int Graph::getNumEdges() const {
 void Graph::addAttribute(const std::string &s, std::unique_ptr<Attribute> value) {
     mAttributes.add(s, std::move(value));
 }
+
+bool Graph::isDirected() const {
+    auto it = mAttributes.find("directed");
+
+    if (it == mAttributes.end()) {
+        return true;
+    }
+
+    return dynamic_cast<AttributeNumber *>(it->second.get())->getValue() == 1.0;
+}

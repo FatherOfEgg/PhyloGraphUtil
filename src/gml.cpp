@@ -215,9 +215,7 @@ GMLGraph &GMLGraph::operator=(const Graph &other) {
 void GMLGraph::addEdge(Edge &e) {
     Graph::addEdge(e);
 
-    auto it = mAttributes.find("directed");
-    if (it != mAttributes.end()
-    &&  dynamic_cast<AttributeNumber *>(it->second.get())->getValue() == 0.0) {
+    if (!isDirected()) {
         auto edgeIt = std::find_if(
             mEdges[e.target].begin(),
             mEdges[e.target].end(),
@@ -235,9 +233,7 @@ void GMLGraph::addEdge(Edge &e) {
 void GMLGraph::addEdge(const std::string &source, const std::string &target, const std::string &label, double weight, double length) {
     Graph::addEdge(source, target, label, weight, length);
 
-    auto it = mAttributes.find("directed");
-    if (it != mAttributes.end()
-    &&  dynamic_cast<AttributeNumber *>(it->second.get())->getValue() == 0.0) {
+    if (!isDirected()) {
         auto edgeIt = std::find_if(
             mEdges[target].begin(),
             mEdges[target].end(),

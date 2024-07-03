@@ -40,6 +40,8 @@ public:
 
     void addAttribute(const std::string &s, std::unique_ptr<Attribute> value);
 
+    bool isDirected() const;
+
     virtual void open(const std::string &file) = 0;
     virtual void save(const std::string &filename) const = 0;
 
