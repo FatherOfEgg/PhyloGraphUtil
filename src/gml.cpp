@@ -30,19 +30,15 @@ static std::vector<Token> tokenize(std::ifstream &f) {
     std::vector<Token> tokens;
     char c;
 
-    while (true) {
-        int v = f.peek();
-
-        if (v == EOF) {
-            break;
-        }
-
-        c = static_cast<char>(v);
+    while (f.get(c)) {
         if (isalpha(c)) {
-            std::string word;
+            std::string word = {c};
 
-            while (f.get(c) && isalpha(c)) {
+            int n = f.peek();
+            while (n != EOF && isalpha(n)) {
+                f.get(c);
                 word += c;
+                n = f.peek();
             }
 
             TokenType t;
@@ -61,30 +57,31 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             tokens.push_back({t, word});
         } else if (c == '[') {
             tokens.push_back({TokenType::OPEN_BRACKET, "["});
-            f.get(c);
         } else if (c == ']') {
             tokens.push_back({TokenType::CLOSE_BRACKET, "]"});
-            f.get(c);
         } else if (c == '"') {
             std::string s;
 
-            f.get(c);
-            while (f.get(c) && c != '"') {
+            int n = f.peek();
+            while (n != EOF && n != '"') {
+                f.get(c);
                 s += c;
+                n = f.peek();
             }
             f.get(c);
 
             tokens.push_back({TokenType::ATTRIBUTE_STRING, s});
         } else if (isdigit(c) || c == '-' || c == '.') {
-            std::string n;
+            std::string num = {c};
 
-            while (f.get(c) && (isdigit(c) || c == '-' || c == '.')) {
-                n += c;
+            int n = f.peek();
+            while (n != EOF && (isdigit(n) || n == '-' || n == '.')) {
+                f.get(c);
+                num += c;
+                n = f.peek();
             }
 
-            tokens.push_back({TokenType::ATTRIBUTE_NUMBER, n});
-        } else {
-            f.get(c);
+            tokens.push_back({TokenType::ATTRIBUTE_NUMBER, num});
         }
     }
 
