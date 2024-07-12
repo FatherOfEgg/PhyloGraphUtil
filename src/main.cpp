@@ -48,6 +48,28 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    std::string path;
+    std::string filename = input;
+    size_t lastSlash = input.find_last_of("/\\");
+
+    if (lastSlash != std::string::npos) {
+        path = input.substr(0, lastSlash + 1);
+        filename = input.substr(lastSlash + 1);
+    }
+
+    std::string filename_no_ext = filename;
+    std::string ext;
+    size_t period = filename.find_last_of('.');
+
+    if (period != std::string::npos) {
+        filename_no_ext = filename.substr(0, period);
+        ext = filename.substr(period + 1);
+
+        if (ext == "ewk" || ext == "nwk") {
+            isGML = false;
+        }
+    }
+
     if (justPrint) {
         if (isGML) {
             GMLGraph gml;
@@ -59,22 +81,6 @@ int main(int argc, char **argv) {
             ewk.print();
         }
         return 0;
-    }
-
-    std::string path;
-    std::string filename = input;
-    size_t lastSlash = input.find_last_of("/\\");
-
-    if (lastSlash != std::string::npos) {
-        path = input.substr(0, lastSlash + 1);
-        filename = input.substr(lastSlash + 1);
-    }
-
-    std::string filename_no_ext = filename;
-    size_t period = filename.find_last_of('.');
-
-    if (period != std::string::npos) {
-        filename_no_ext = filename.substr(0, period);
     }
 
     if (isGML) {
