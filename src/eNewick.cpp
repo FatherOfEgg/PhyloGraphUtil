@@ -251,10 +251,6 @@ void ENewickGraph::save(const std::string &filename, bool includeInternalNames) 
     save(filename);
 }
 
-void ENewickGraph::print() const {
-
-}
-
 std::string ENewickGraph::dfs(const std::string &nodeID, const std::unordered_map<std::string, std::string> &hybrids) const {
     auto it = mEdges.find(nodeID);
     if (it == mEdges.end()

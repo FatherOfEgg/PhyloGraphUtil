@@ -11,5 +11,4 @@ public:
 
     void open(const std::string &file) override;
     void save(const std::string &filename) const override;
-    void print() const override;
 };

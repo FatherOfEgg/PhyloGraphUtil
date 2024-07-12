@@ -37,7 +37,7 @@ public:
     virtual void open(const std::string &file) = 0;
     virtual void save(const std::string &filename) const = 0;
 
-    virtual void print() const = 0;
+    virtual void print() const;
 
 protected:
     std::vector<Node> mNodes;

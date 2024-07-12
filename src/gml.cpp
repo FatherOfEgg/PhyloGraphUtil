@@ -252,26 +252,3 @@ void GMLGraph::save(const std::string &filename) const {
 
     f.close();
 }
-
-void GMLGraph::print() const {
-    std::cout << "Nodes:" << std::endl;
-    for (const auto &n : mNodes) {
-        std::cout << n.id << ", \"" << n.label << "\"" << std::endl;
-    }
-    std::cout << std::endl;
-
-    std::cout << "Edges:" << std::endl;
-    for (const auto &e : mEdges) {
-        std::cout << e.first << ": ";
-
-        for (const auto &x : e.second) {
-            std::cout << x.target << ", ";
-        }
-
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-
-    std::cout << "NumNodes: " << getNumNodes() << std::endl;
-    std::cout << "NumEdges: " << getNumEdges() << std::endl;
-}
