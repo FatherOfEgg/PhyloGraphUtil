@@ -102,10 +102,9 @@ static bool parse(GMLGraph &g, const std::vector<Token> &tokens) {
                 return false;
             }
 
+            i++;
             Node n;
             while (tokens[i].type != TokenType::CLOSE_BRACKET) {
-                i++;
-
                 if (tokens[i].type == TokenType::ATTRIBUTE_NAME) {
                     std::string attributeName = tokens[i].value;
                     i++;
@@ -115,23 +114,22 @@ static bool parse(GMLGraph &g, const std::vector<Token> &tokens) {
                     } else if (attributeName == "label") {
                         n.label = tokens[i].value;
                     } else if (tokens[i].type == TokenType::OPEN_BRACKET) {
-                        i++;
                         unsigned int bracketCount = 1;
 
                         while (bracketCount) {
+                            i++;
+
                             if (tokens[i].type == TokenType::OPEN_BRACKET) {
                                 bracketCount++;
                             } else if (tokens[i].type == TokenType::CLOSE_BRACKET) {
                                 bracketCount--;
                             }
-
-                            i++;
                         }
                     }
                 }
-            }
 
-            i++;
+                i++;
+            }
 
             g.addNode(n);
         } else if (tokens[i].type == TokenType::EDGE) {
