@@ -1,5 +1,4 @@
 #include "eNewick.h"
-#include "attribute.h"
 #include "graph.h"
 
 #include <algorithm>
@@ -96,7 +95,7 @@ static void fillMissingInternalNames(std::vector<Token> &tokens) {
     unsigned int letterNames = 0;
     double maxNumber = 0;
     std::string maxLetters;
-    std::string largestName = "";
+    std::string largestName;
 
     for (auto &t : tokens) {
         if (t.type == TokenType::INTERNAL_NAME) {
@@ -164,8 +163,7 @@ static bool parse(ENewickGraph &g, const std::vector<Token> &tokens) {
 
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == TokenType::LEAF_NAME) {
-            AttributeMap map;
-            g.addNode(tokens[i].value, "", map);
+            g.addNode(tokens[i].value, "");
 
             edgeInfo.push(std::make_pair(tokens[i].value, ""));
             numChildren.top()++;
@@ -175,7 +173,6 @@ static bool parse(ENewickGraph &g, const std::vector<Token> &tokens) {
                     tokens[i].value,
                     edgeInfo.top().first,
                     "",
-                    1.0,
                     std::stod(edgeInfo.top().second)
                 );
                 edgeInfo.pop();
@@ -183,8 +180,7 @@ static bool parse(ENewickGraph &g, const std::vector<Token> &tokens) {
 
             numChildren.pop();
 
-            AttributeMap map;
-            g.addNode(tokens[i].value, "", map);
+            g.addNode(tokens[i].value, "");
 
             edgeInfo.push(std::make_pair(tokens[i].value, ""));
             if (!numChildren.empty()) {
