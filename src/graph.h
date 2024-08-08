@@ -18,29 +18,20 @@ struct Edge {
     double length;
 };
 
-class Graph {
+struct Graph {
 public:
-    Graph();
-    Graph(const Graph &other);
-    virtual ~Graph();
-
-    Graph &operator=(const Graph &other);
-
-    virtual void addNode(Node &n);
-    virtual void addNode(const std::string &id, const std::string &label);
+    void addNode(Node &n);
+    void addNode(const std::string &id, const std::string &label);
     unsigned int getNumNodes() const;
 
-    virtual void addEdge(Edge &e);
-    virtual void addEdge(const std::string &source, const std::string &target, const std::string &label, double length);
+    void addEdge(Edge &e);
+    void addEdge(const std::string &source, const std::string &target, const std::string &label, double length);
     unsigned int getNumEdges() const;
 
-    virtual void open(const std::string &file) = 0;
-    virtual void save(const std::string &filename) const = 0;
+    void print() const;
 
-    virtual void print() const;
-
-protected:
-    std::vector<Node> mNodes;
-    std::unordered_map<std::string, std::vector<Edge>> mEdges;
-    std::unordered_map<std::string, size_t> mIdToIndex;
+public:
+    std::vector<Node> nodes;
+    std::unordered_map<std::string, std::vector<Edge>> edges;
+    std::unordered_map<std::string, size_t> idToIndex;
 };
