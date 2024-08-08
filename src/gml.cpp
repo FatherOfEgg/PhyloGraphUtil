@@ -6,7 +6,6 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -88,7 +87,7 @@ static std::vector<Token> tokenize(std::ifstream &f) {
     return tokens;
 }
 
-static bool parse(GMLGraph &g, const std::vector<Token> &tokens) {
+static bool parse(Graph &g, const std::vector<Token> &tokens) {
     if (tokens.front().type != TokenType::GRAPH
     ||  tokens[1].type != TokenType::OPEN_BRACKET) {
         return false;
@@ -175,20 +174,7 @@ static bool parse(GMLGraph &g, const std::vector<Token> &tokens) {
     return true;
 }
 
-GMLGraph::GMLGraph() {}
-
-GMLGraph::GMLGraph(const Graph &other)
-: Graph(other) {}
-
-GMLGraph &GMLGraph::operator=(const Graph &other) {
-    if (this != &other) {
-        Graph::operator=(other);
-    }
-
-    return *this;
-}
-
-void GMLGraph::open(const std::string &file) {
+void openGML(Graph &g, const std::string &file) {
     std::ifstream f(file);
 
     if (!f.is_open()) {
@@ -199,13 +185,13 @@ void GMLGraph::open(const std::string &file) {
     std::vector<Token> tokens = tokenize(f);
     f.close();
 
-    if (!parse(*this, tokens)) {
+    if (!parse(g, tokens)) {
         std::cerr << "'" << file << "' is not a valid GML file." << std::endl;
         std::exit(1);
     }
 }
 
-void GMLGraph::save(const std::string &filename) const {
+void saveGML(Graph &g, const std::string &filename) {
     std::ofstream f(filename);
 
     if (!f) {
@@ -219,7 +205,7 @@ void GMLGraph::save(const std::string &filename) const {
 
     f << indent << "directed 1" << std::endl;
 
-    for (const auto &n : mNodes) {
+    for (const auto &n : g.nodes) {
         f << indent << "node [" << std::endl;
         indent += "    ";
 
@@ -230,7 +216,7 @@ void GMLGraph::save(const std::string &filename) const {
         f << indent << "]" << std::endl;
     }
 
-    for (const auto &e : mEdges) {
+    for (const auto &e : g.edges) {
         std::string source = e.first;
 
         for (const auto &adj : e.second) {

@@ -2,54 +2,32 @@
 
 #include <iostream>
 
-Graph::Graph() {}
-
-Graph::Graph(const Graph &other)
-: mNodes(other.mNodes), mEdges(other.mEdges),
-  mIdToIndex(other.mIdToIndex) {}
-
-Graph::~Graph() {}
-
-Graph &Graph::operator=(const Graph &other) {
-    if (this != &other) {
-        mNodes.clear();
-        mEdges.clear();
-        mIdToIndex.clear();
-
-        mNodes = other.mNodes;
-        mEdges = other.mEdges;
-        mIdToIndex = other.mIdToIndex;
-    }
-
-    return *this;
-}
-
 void Graph::addNode(Node &n) {
-    mNodes.push_back(std::move(n));
-    mIdToIndex[n.id] = mNodes.size() - 1;
+    nodes.push_back(std::move(n));
+    idToIndex[n.id] = nodes.size() - 1;
 }
 
 void Graph::addNode(const std::string &id, const std::string &label) {
-    mNodes.emplace_back(Node{id, label});
-    mIdToIndex[id] = mNodes.size() - 1;
+    nodes.emplace_back(Node{id, label});
+    idToIndex[id] = nodes.size() - 1;
 }
 
 unsigned int Graph::getNumNodes() const {
-    return mNodes.size();
+    return nodes.size();
 }
 
 void Graph::addEdge(Edge &e) {
-    mEdges[e.source].push_back(e);
+    edges[e.source].push_back(e);
 }
 
 void Graph::addEdge(const std::string &source, const std::string &target, const std::string &label, double length) {
-    mEdges[source].emplace_back(Edge{source, target, label, length});
+    edges[source].emplace_back(Edge{source, target, label, length});
 }
 
 unsigned int Graph::getNumEdges() const {
     unsigned int total = 0;
 
-    for (const auto &e : mEdges) {
+    for (const auto &e : edges) {
         total += e.second.size();
     }
 
@@ -58,13 +36,13 @@ unsigned int Graph::getNumEdges() const {
 
 void Graph::print() const {
     std::cout << "Nodes:" << std::endl;
-    for (const auto &n : mNodes) {
+    for (const auto &n : nodes) {
         std::cout << n.id << ", \"" << n.label << "\"" << std::endl;
     }
     std::cout << std::endl;
 
     std::cout << "Edges:" << std::endl;
-    for (const auto &e : mEdges) {
+    for (const auto &e : edges) {
         std::cout << e.first << ": ";
 
         for (const auto &x : e.second) {
