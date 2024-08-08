@@ -65,43 +65,29 @@ int main(int argc, char **argv) {
         filename_no_ext = filename.substr(0, period);
         ext = filename.substr(period + 1);
 
-        if (ext == "ewk" || ext == "nwk") {
+        if (ext == "enwk" || ext == "ewk" || ext == "nwk") {
             isGML = false;
         }
     }
 
-    if (justPrint) {
-        if (isGML) {
-            GMLGraph gml;
-            gml.open(input);
-            gml.print();
-        } else {
-            ENewickGraph ewk;
-            ewk.open(input);
-            ewk.print();
+    Graph g;
+
+    if (isGML) {
+        openGML(g, input);
+    } else {
+        openENWK(g, input);
+    }
+
+    if (print || justPrint) {
+        g.print();
+        if (justPrint) {
+            return 0;
         }
-        return 0;
     }
 
     if (isGML) {
-        GMLGraph gml;
-        gml.open(input);
-
-        if (print) {
-            gml.print();
-        }
-
-        ENewickGraph ewk(gml);
-        ewk.save(filename_no_ext + ".ewk");
+        saveENWK(g, filename_no_ext + ".enwk", false);
     } else {
-        ENewickGraph ewk;
-        ewk.open(input);
-
-        if (print) {
-            ewk.print();
-        }
-
-        GMLGraph gml(ewk);
-        gml.save(filename_no_ext + ".gml");
+        saveGML(g, filename_no_ext + ".gml");
     }
 }
