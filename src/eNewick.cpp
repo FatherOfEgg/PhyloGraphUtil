@@ -252,7 +252,7 @@ std::string dfs(
                 return node.id == nodeID;
             }
         );
-        return n->label;
+        return n->id;
     }
 
     std::vector<Edge> neighbors = it->second;
