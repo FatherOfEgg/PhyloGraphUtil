@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-TARGET = PhyloGraphConverter
+TARGET = PhyloGraphUtil
 CC = g++
 CFLAGS += -O2 -Wall
 

@@ -57,10 +57,10 @@ static std::string filenameNoExt(const std::string &file) {
 }
 
 static void printUsage() {
-    std::cout << "PhyloGraphConverter" << std::endl;
+    std::cout << "PhyloGraphUtil" << std::endl;
     std::cout << std::endl;
     std::cout << "USAGE:" << std::endl;
-    std::cout << "\tPhyloGraphConverter <SUBCOMMAND>" << std::endl;
+    std::cout << "\tPhyloGraphUtil <SUBCOMMAND>" << std::endl;
     std::cout << std::endl;
     std::cout << "FLAGS:" << std::endl;
     std::cout << "\t-h\tPrints help information for this and each subcommand." << std::endl;
@@ -71,11 +71,11 @@ static void printUsage() {
 }
 
 static void printConvertUsage() {
-    std::cout << "PhyloGraphConverter Convert" << std::endl;
+    std::cout << "PhyloGraphUtil Convert" << std::endl;
     std::cout << "Converts from one graph format to another." << std::endl;
     std::cout << std::endl;
     std::cout << "USAGE:" << std::endl;
-    std::cout << "\tPhyloGraphConverter convert <FORMAT 1> <INPUT> <FORMAT2> [OUTPUT]" << std::endl;
+    std::cout << "\tPhyloGraphUtil convert <FORMAT 1> <INPUT> <FORMAT2> [OUTPUT]" << std::endl;
     std::cout << std::endl;
     std::cout << "FLAGS:" << std::endl;
     std::cout << "\t-h\tPrints help information." << std::endl;
@@ -174,11 +174,11 @@ static void subcommandConvert(int argc, char **argv) {
 }
 
 static void printPrintUsage() {
-    std::cout << "PhyloGraphConverter Print" << std::endl;
+    std::cout << "PhyloGraphUtil Print" << std::endl;
     std::cout << "Prints basic info of the read-in graph(s)." << std::endl;
     std::cout << std::endl;
     std::cout << "USAGE:" << std::endl;
-    std::cout << "\tPhyloGraphConverter print <FORMAT 1> <FILE 1> <FORMAT2>..." << std::endl;
+    std::cout << "\tPhyloGraphUtil print <FORMAT 1> <FILE 1> <FORMAT2>..." << std::endl;
     std::cout << std::endl;
     std::cout << "FLAGS:" << std::endl;
     std::cout << "\t-h\tPrints help information." << std::endl;
