@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -13,6 +14,7 @@ enum class TokenType {
     OPEN_BRACKET,
     CLOSE_BRACKET,
     GRAPH,
+    DIRECTED,
     NODE,
     EDGE,
     ATTRIBUTE_NAME,
@@ -43,6 +45,8 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             TokenType t;
             if (word == "graph") {
                 t = TokenType::GRAPH;
+            } else if (word == "directed") {
+                t = TokenType::DIRECTED;
             } else if (word == "node") {
                 t = TokenType::NODE;
             } else if (word == "edge") {
@@ -78,6 +82,12 @@ static std::vector<Token> tokenize(std::ifstream &f) {
                 f.get(c);
                 num += c;
                 n = f.peek();
+            }
+
+            if (tokens.back().type == TokenType::DIRECTED
+            &&  std::stoi(num, nullptr) == 0) {
+                std::cerr << "GML graph is not directed. Please make sure it is directed." << std::endl;
+                std::exit(1);
             }
 
             tokens.push_back({TokenType::ATTRIBUTE_NUMBER, num});
