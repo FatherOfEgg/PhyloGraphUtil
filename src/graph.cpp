@@ -1,55 +1,66 @@
 #include "graph.h"
 
+#include <algorithm>
+#include <cstdint>
+#include <cstdlib>
 #include <iostream>
+#include <iterator>
+#include <vector>
 
-void Graph::addNode(Node &n) {
-    nodes.push_back(std::move(n));
-    idToIndex[n.id] = nodes.size() - 1;
-}
-
-void Graph::addNode(const std::string &id, const std::string &label) {
-    nodes.emplace_back(Node{id, label});
-    idToIndex[id] = nodes.size() - 1;
+void Graph::addNode() {
+    adjList.emplace_back();
 }
 
 unsigned int Graph::getNumNodes() const {
-    return nodes.size();
+    return adjList.size();
 }
 
-void Graph::addEdge(Edge &e) {
-    edges[e.source].push_back(e);
-}
+void Graph::addEdge(const uint64_t &source, const uint64_t &target) {
+    if (source >= adjList.size()) {
+        addNode();
+    }
 
-void Graph::addEdge(const std::string &source, const std::string &target, const std::string &label, double length) {
-    edges[source].emplace_back(Edge{source, target, label, length});
+    adjList[source].push_back(target);
 }
 
 unsigned int Graph::getNumEdges() const {
     unsigned int total = 0;
 
-    for (const auto &e : edges) {
-        total += e.second.size();
+    for (const auto &e : adjList) {
+        total += e.size();
     }
 
     return total;
 }
 
-void Graph::print() const {
-    std::cout << "Nodes:" << std::endl;
-    for (const auto &n : nodes) {
-        std::cout << n.id << ", \"" << n.label << "\"" << std::endl;
+uint64_t Graph::getRoot() const {
+    std::vector<uint64_t> inDegree(adjList.size());
+
+    for (const auto &n : adjList) {
+        for (const auto &t : n) {
+            inDegree[t]++;
+        }
     }
-    std::cout << std::endl;
 
-    std::cout << "Edges:" << std::endl;
-    for (const auto &e : edges) {
-        std::cout << e.first << ": ";
+    auto it = std::find(inDegree.begin(), inDegree.end(), 0);
 
-        for (const auto &x : e.second) {
-            std::cout << x.target << ", ";
+    if (it == inDegree.end()) {
+        std::cerr << "Couldn't find root." << std::endl;
+        std::exit(1);
+    }
+
+    return std::distance(inDegree.begin(), it);
+}
+
+void Graph::print() const {
+    for (size_t i = 0; i < adjList.size(); i++) {
+        std::cout << i << ": [";
+
+        for (const auto &t : adjList[i]) {
+            std::cout << t << ", ";
         }
 
-        std::cout << std::endl;
+        std::cout << "]" << std::endl;
     }
     std::cout << std::endl;
 

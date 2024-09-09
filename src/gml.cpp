@@ -1,13 +1,14 @@
 #include "gml.h"
 #include "graph.h"
 
-#include <algorithm>
 #include <cctype>
-#include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 enum class TokenType {
@@ -103,6 +104,9 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
         return false;
     }
 
+    uint64_t curIndex = 0;
+    std::unordered_map<std::string, uint64_t> idToIndex;
+
     for (size_t i = 2; i < tokens.size(); i++) {
         if (tokens[i].type == TokenType::NODE) {
             i++;
@@ -112,16 +116,16 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
             }
 
             i++;
-            Node n;
             while (tokens[i].type != TokenType::CLOSE_BRACKET) {
                 if (tokens[i].type == TokenType::ATTRIBUTE_NAME) {
                     std::string attributeName = tokens[i].value;
                     i++;
 
                     if (attributeName == "id") {
-                        n.id = tokens[i].value;
-                    } else if (attributeName == "label") {
-                        n.label = tokens[i].value;
+                        idToIndex[tokens[i].value] = curIndex;
+                        g.addNode();
+
+                        curIndex++;
                     } else if (tokens[i].type == TokenType::OPEN_BRACKET) {
                         unsigned int bracketCount = 1;
 
@@ -139,8 +143,6 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
                 i++;
             }
-
-            g.addNode(n);
         } else if (tokens[i].type == TokenType::EDGE) {
             i++;
 
@@ -149,35 +151,25 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
             }
 
             i++;
-            Edge e = {.length = std::nan("")};
+            uint64_t source;
+            uint64_t target;
+
             while (tokens[i].type != TokenType::CLOSE_BRACKET) {
                 if (tokens[i].type == TokenType::ATTRIBUTE_NAME) {
                     std::string attributeName = tokens[i].value;
                     i++;
 
                     if (attributeName == "source") {
-                        e.source = tokens[i].value;
+                        source = idToIndex[tokens[i].value];
                     } else if (attributeName == "target") {
-                        e.target = tokens[i].value;
-                    } else if (attributeName == "label") {
-                        e.label = tokens[i].value;
-
-                        bool isNumber = std::all_of(e.label.begin(), e.label.end(), [](const auto &c) {
-                            return isdigit(c) || c == '.';
-                        });
-
-                        if (isNumber) {
-                            e.length = std::stod(e.label);
-                        }
-                    } else if (attributeName == "length") {
-                        e.length = std::stod(tokens[i].value);
+                        target = idToIndex[tokens[i].value];
                     }
                 }
 
                 i++;
             }
 
-            g.addEdge(e);
+            g.addEdge(source, target);
         }
     }
 
@@ -209,39 +201,35 @@ void saveGML(Graph &g, const std::string &filename) {
         std::exit(1);
     }
 
+    std::ostringstream edges;
+
     std::string indent = "    ";
 
     f << "graph [" << std::endl;
-
     f << indent << "directed 1" << std::endl;
-
-    for (const auto &n : g.nodes) {
+    
+    for (size_t i = 0; i < g.adjList.size(); i++) {
         f << indent << "node [" << std::endl;
         indent += "    ";
 
-        f << indent << "id " << n.id << std::endl;
-        f << indent << "label \"" << n.label << "\"" << std::endl;
+        f << indent << "id " << i << std::endl;
 
         indent = indent.substr(0, indent.length() - 4);
         f << indent << "]" << std::endl;
-    }
 
-    for (const auto &e : g.edges) {
-        std::string source = e.first;
-
-        for (const auto &adj : e.second) {
+        for (const auto &t : g.adjList[i]) {
             f << indent << "edge [" << std::endl;
             indent += "    ";
 
-            f << indent << "source " << source << std::endl;
-            f << indent << "target " << adj.target << std::endl;
-            f << indent << "label \"" << adj.label << "\"" << std::endl;
+            f << indent << "source " << i << std::endl;
+            f << indent << "target " << t<< std::endl;
 
             indent = indent.substr(0, indent.length() - 4);
             f << indent << "]" << std::endl;
         }
     }
 
+    f << edges.str();
     f << "]";
 
     f.close();

@@ -1,37 +1,26 @@
 #pragma once
 
-#include <fstream>
-#include <memory>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-struct Node {
-    std::string id;
-    std::string label;
-};
-
-struct Edge {
-    std::string source;
-    std::string target;
-    std::string label;
-    double length;
-};
-
 struct Graph {
 public:
-    void addNode(Node &n);
-    void addNode(const std::string &id, const std::string &label);
+    void addNode();
     unsigned int getNumNodes() const;
 
-    void addEdge(Edge &e);
-    void addEdge(const std::string &source, const std::string &target, const std::string &label, double length);
+    void addEdge(const uint64_t &source, const uint64_t &target);
     unsigned int getNumEdges() const;
+
+    uint64_t getRoot() const;
 
     void print() const;
 
 public:
-    std::vector<Node> nodes;
-    std::unordered_map<std::string, std::vector<Edge>> edges;
-    std::unordered_map<std::string, size_t> idToIndex;
+    std::vector<std::vector<uint64_t>> adjList;
+    std::vector<uint64_t> leaves;
+    std::unordered_map<uint64_t, std::string> leafName;
+
+    std::vector<uint64_t> reticulations;
 };
