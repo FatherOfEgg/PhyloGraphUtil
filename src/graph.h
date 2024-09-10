@@ -13,8 +13,6 @@ public:
     void addEdge(const uint64_t &source, const uint64_t &target);
     unsigned int getNumEdges() const;
 
-    uint64_t getRoot() const;
-
     void print() const;
 
 public:
