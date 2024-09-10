@@ -106,6 +106,7 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
     uint64_t curIndex = 0;
     std::unordered_map<std::string, uint64_t> idToIndex;
+    std::unordered_map<uint64_t, std::string> indexToId;
 
     for (size_t i = 2; i < tokens.size(); i++) {
         if (tokens[i].type == TokenType::NODE) {
@@ -123,6 +124,7 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
                     if (attributeName == "id") {
                         idToIndex[tokens[i].value] = curIndex;
+                        indexToId[curIndex] = tokens[i].value;
                         g.addNode();
 
                         curIndex++;
@@ -170,6 +172,12 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
             }
 
             g.addEdge(source, target);
+        }
+    }
+
+    for (size_t i = 0; i < g.adjList.size(); i++) {
+        if (g.adjList[i].empty()) {
+            g.leafName[i] = indexToId[i];
         }
     }
 
