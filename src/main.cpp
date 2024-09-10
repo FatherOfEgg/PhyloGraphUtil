@@ -7,6 +7,7 @@
 
 #include "eNewick.h"
 #include "gml.h"
+#include "compare.h"
 
 #define ARRAY_LENGTH(ARR) (sizeof(ARR) / sizeof((ARR)[0]))
 
@@ -173,6 +174,84 @@ static void subcommandConvert(int argc, char **argv) {
     }
 }
 
+static void printCompareUsage() {
+
+}
+
+static void subcommandCompare(int argc, char **argv) {
+    if (argc == 0) {
+        printCompareUsage();
+        std::exit(1);
+    }
+
+    std::string format1;
+    std::string input1;
+    std::string format2;
+    std::string input2;
+
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argv[i], "-h")) {
+            printCompareUsage();
+            std::exit(0);
+        } else if (format1.empty()) {
+            if (!isValidFormat(argv[i])) {
+                std::cerr << "'" << argv[i] << "' is not a valid format." << std::endl;
+                std::exit(1);
+            }
+
+            format1 = argv[i];
+
+            if (i + 1 >= argc) {
+                std::cerr << "Did not supply a '" << argv[i] << "' file." << std::endl;
+                printCompareUsage();
+                std::exit(1);
+            }
+
+            i++;
+            input1 = argv[i];
+        } else if (format2.empty()) {
+            if (!isValidFormat(argv[i])) {
+                std::cerr << "'" << argv[i] << "' is not a valid format." << std::endl;
+                std::exit(1);
+            }
+
+            format2 = argv[i];
+
+            if (i + 1 >= argc) {
+                std::cerr << "Did not supply a '" << argv[i] << "' file." << std::endl;
+                printCompareUsage();
+                std::exit(1);
+            }
+
+            i++;
+            input2 = argv[i];
+        }
+    }
+
+    if (format1.empty() || input1.empty()
+    ||  format2.empty() || input2.empty()) {
+        printCompareUsage();
+        std::exit(1);
+    }
+
+    Graph g1;
+    Graph g2;
+
+    if (format1 == "GML") {
+        openGML(g1, input1);
+    } else if (format1 == "ENWK") {
+        openENWK(g1, input1);
+    }
+
+    if (format2 == "GML") {
+        openGML(g2, input2);
+    } else if (format2 == "ENWK") {
+        openENWK(g2, input2);
+    }
+
+    std::cout << "Smallest RF Distance: " << compare(g1, g2) << std::endl;
+}
+
 static void printPrintUsage() {
     std::cout << "PhyloGraphUtil Print" << std::endl;
     std::cout << "Prints basic info of the read-in graph(s)." << std::endl;
@@ -233,6 +312,7 @@ int main(int argc, char **argv) {
 
     const SubCommand subCommands[] = {
         {"convert", subcommandConvert},
+        {"compare", subcommandCompare},
         {"print", subcommandPrint},
     };
 
