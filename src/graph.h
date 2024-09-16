@@ -20,5 +20,6 @@ public:
     std::vector<uint64_t> leaves;
     std::unordered_map<uint64_t, std::string> leafName;
 
-    std::vector<uint64_t> reticulations;
+    // The vec contains the reticulation's parents
+    std::unordered_map<uint64_t, std::vector<uint64_t>> reticulations;
 };
