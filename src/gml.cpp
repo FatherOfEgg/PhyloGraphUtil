@@ -177,6 +177,7 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
     for (size_t i = 0; i < g.adjList.size(); i++) {
         if (g.adjList[i].empty()) {
+            g.leaves.push_back(i);
             g.leafName[i] = indexToId[i];
         }
     }
