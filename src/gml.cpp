@@ -241,14 +241,14 @@ void saveGML(Graph &g, const std::string &filename) {
         f << indent << "]" << std::endl;
 
         for (const auto &t : g.adjList[i]) {
-            f << indent << "edge [" << std::endl;
+            edges << indent << "edge [" << std::endl;
             indent += "    ";
 
-            f << indent << "source " << i << std::endl;
-            f << indent << "target " << t<< std::endl;
+            edges << indent << "source " << i << std::endl;
+            edges << indent << "target " << t<< std::endl;
 
             indent = indent.substr(0, indent.length() - 4);
-            f << indent << "]" << std::endl;
+            edges << indent << "]" << std::endl;
         }
     }
 
