@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 enum class TokenType {
@@ -108,6 +109,9 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     std::unordered_map<std::string, uint64_t> idToIndex;
     std::unordered_map<uint64_t, std::string> indexToId;
 
+    std::unordered_set<uint64_t> reticulations;
+    std::unordered_map<uint64_t, std::vector<uint64_t>> nodeParents;
+
     for (size_t i = 2; i < tokens.size(); i++) {
         if (tokens[i].type == TokenType::NODE) {
             i++;
@@ -171,8 +175,18 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                 i++;
             }
 
+            nodeParents[target].push_back(source);
+
+            if (nodeParents[target].size() >= 2) {
+                reticulations.insert(target);
+            }
+
             g.addEdge(source, target);
         }
+    }
+
+    for (const uint64_t &r : reticulations) {
+        g.reticulations[r] = nodeParents[r];
     }
 
     for (size_t i = 0; i < g.adjList.size(); i++) {
