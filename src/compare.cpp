@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
@@ -29,24 +30,37 @@ static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
     return std::distance(inDegree.begin(), it);
 }
 
-static std::vector<std::unordered_set<std::string>> getSplits(
-    const std::vector<std::vector<uint64_t>> &adjList,
-    const std::unordered_map<uint64_t, std::string> &leafName
+static std::vector<std::unordered_set<std::string>> getSplitsHelper(
+    const Graph &g,
+    const std::unordered_map<uint64_t, uint8_t> &curEdges
 ) {
-    uint64_t root = getRoot(adjList);
+    uint64_t root = getRoot(g.adjList);
 
     std::vector<std::unordered_set<std::string>> splits;
-    std::vector<std::unordered_set<std::string>> subtreeLeaves(adjList.size());
+    std::vector<std::unordered_set<std::string>> subtreeLeaves(g.adjList.size());
 
     std::function<std::unordered_set<std::string>(uint64_t)> dfs = [&](uint64_t node) -> std::unordered_set<std::string> {
-        if (leafName.find(node) != leafName.end()) {
+        if (g.leafName.find(node) != g.leafName.end()) {
             // Leaf is more or less a subtree of itself
-            subtreeLeaves[node].insert(leafName.at(node));
+            subtreeLeaves[node].insert(g.leafName.at(node));
             return subtreeLeaves[node];
         }
 
-        for (const uint64_t &c : adjList[node]) {
+        for (const uint64_t &c : g.adjList[node]) {
             // Get this node's children's subtree and the leaves that they each can reach
+
+            // Check if node has an edge to a reticulation
+            auto it = g.reticulations.find(c);
+            if (it != g.reticulations.end()) {
+                const std::vector<uint64_t> &parents = it->second;
+                uint8_t curEdge = curEdges.at(c);
+
+                // Continue if there is "no" edge from node to reticulation
+                if (parents[curEdge] != node) {
+                    continue;
+                }
+            }
+
             std::unordered_set<std::string> children = dfs(c);
             subtreeLeaves[node].insert(children.begin(), children.end());
         }
@@ -63,13 +77,42 @@ static std::vector<std::unordered_set<std::string>> getSplits(
     return splits;
 }
 
-static uint64_t rf_dist(
-    const std::vector<std::vector<uint64_t>> &adjList1, const std::unordered_map<uint64_t, std::string> &leafName1,
-    const std::vector<std::vector<uint64_t>> &adjList2, const std::unordered_map<uint64_t, std::string> &leafName2
-) {
-    std::vector<std::unordered_set<std::string>> splits1 = getSplits(adjList1, leafName1);
-    std::vector<std::unordered_set<std::string>> splits2 = getSplits(adjList2, leafName2);
+static std::vector<std::vector<std::unordered_set<std::string>>> getSplits(const Graph &g) {
+    std::vector<std::vector<std::unordered_set<std::string>>> res;
 
+    std::unordered_map<uint64_t, uint8_t> curEdges;
+
+    for (const auto &p : g.reticulations) {
+        curEdges[p.first] = 0;
+    }
+
+    while (true) {
+        res.push_back(getSplitsHelper(g, curEdges));
+
+        auto it = curEdges.begin();
+        while (it != curEdges.end()) {
+            if (it->second < g.reticulations.at(it->first).size() - 1) {
+                it->second++;
+                break;
+            } else {
+                it->second = 0;
+            }
+
+            it++;
+        }
+
+        if (it == curEdges.end()) {
+            break;
+        }
+    }
+
+    return res;
+}
+
+static uint64_t rf_dist(
+    const std::vector<std::unordered_set<std::string>> &splits1,
+    const std::vector<std::unordered_set<std::string>> &splits2
+) {
     // TODO: Figure out a better way to do this, maybe bit manip?
     auto concatSplit = [](const std::unordered_set<std::string> &split) {
         std::string res;
@@ -128,10 +171,16 @@ void compare(const Graph &g1, const Graph &g2) {
         std::exit(1);
     }
 
+    auto splits1 = getSplits(g1);
+    auto splits2 = getSplits(g2);
+
     std::vector<uint64_t> dists;
 
-    uint64_t dist = rf_dist(g1.adjList, g1.leafName, g2.adjList, g2.leafName);
-    dists.push_back(dist);
+    for (const auto &s1 : splits2) {
+        for (const auto &s2 : splits2) {
+            dists.push_back(rf_dist(s1, s2));
+        }
+    }
 
     uint64_t smallestDist = *std::min_element(dists.begin(), dists.end());
     size_t n = g1.leaves.size();
