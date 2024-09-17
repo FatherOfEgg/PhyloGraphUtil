@@ -68,6 +68,7 @@ static void printUsage() {
     std::cout << std::endl;
     std::cout << "SUBCOMMANDS:" << std::endl;
     std::cout << "\tconvert\tConverts from one graph format to another." << std::endl;
+    std::cout << "\tcompare\tCompares one graph to another using Robinson Foulds distance." << std::endl;
     std::cout << "\tprint\tPrints basic info of the read-in graph(s)." << std::endl;
 }
 
