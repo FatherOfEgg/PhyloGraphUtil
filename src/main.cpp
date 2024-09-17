@@ -72,7 +72,7 @@ static void printUsage() {
 }
 
 static void printConvertUsage() {
-    std::cout << "PhyloGraphUtil Convert" << std::endl;
+    std::cout << "PhyloGraphUtil convert" << std::endl;
     std::cout << "Converts from one graph format to another." << std::endl;
     std::cout << std::endl;
     std::cout << "USAGE:" << std::endl;
@@ -253,7 +253,7 @@ static void subcommandCompare(int argc, char **argv) {
 }
 
 static void printPrintUsage() {
-    std::cout << "PhyloGraphUtil Print" << std::endl;
+    std::cout << "PhyloGraphUtil print" << std::endl;
     std::cout << "Prints basic info of the read-in graph(s)." << std::endl;
     std::cout << std::endl;
     std::cout << "USAGE:" << std::endl;
