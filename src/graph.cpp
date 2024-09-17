@@ -35,7 +35,15 @@ unsigned int Graph::getNumEdges() const {
 
 void Graph::print() const {
     for (size_t i = 0; i < adjList.size(); i++) {
-        std::cout << i << ": [";
+        std::cout << i;
+
+        if (reticulations.find(i) != reticulations.end()) {
+            std::cout << "r";
+        } else {
+            std::cout << " ";
+        }
+
+        std::cout << ": [";
 
         for (const auto &t : adjList[i]) {
             std::cout << t << ", ";
@@ -43,6 +51,16 @@ void Graph::print() const {
 
         std::cout << "]" << std::endl;
     }
+    std::cout << std::endl;
+
+    std::cout << "Reticulations: [";
+
+    for (const auto &p : reticulations) {
+        std::cout << p.first << ", ";
+    }
+
+    std::cout << "]" << std::endl;
+
     std::cout << std::endl;
 
     std::cout << "NumNodes: " << getNumNodes() << std::endl;
