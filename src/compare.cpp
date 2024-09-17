@@ -38,7 +38,7 @@ static std::vector<std::unordered_set<std::string>> getSplits(
     std::vector<std::unordered_set<std::string>> splits;
     std::vector<std::unordered_set<std::string>> subtreeLeaves(adjList.size());
 
-    std::function<std::unordered_set<std::string>(int)> dfs = [&](int node) -> std::unordered_set<std::string> {
+    std::function<std::unordered_set<std::string>(uint64_t)> dfs = [&](uint64_t node) -> std::unordered_set<std::string> {
         if (leafName.find(node) != leafName.end()) {
             // Leaf is more or less a subtree of itself
             subtreeLeaves[node].insert(leafName.at(node));
