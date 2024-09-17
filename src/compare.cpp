@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -28,34 +29,6 @@ static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
     return std::distance(inDegree.begin(), it);
 }
 
-static std::unordered_set<std::string> dfs(
-    uint64_t node,
-    uint64_t rootNode,
-    const std::vector<std::vector<uint64_t>> &adjList,
-    const std::unordered_map<uint64_t, std::string> &leafName,
-    std::vector<std::unordered_set<std::string>> &subtreeLeaves,
-    std::vector<std::unordered_set<std::string>> &splits
-) {
-    if (leafName.find(node) != leafName.end()) {
-        // Leaf is more or less a subtree of itself
-        subtreeLeaves[node].insert(leafName.at(node));
-        return subtreeLeaves[node];
-    }
-
-    for (const uint64_t &c : adjList[node]) {
-        // Get this node's children's subtree and the leaves that they each can reach
-        std::unordered_set<std::string> children = dfs(c, rootNode, adjList, leafName, subtreeLeaves, splits);
-        subtreeLeaves[node].insert(children.begin(), children.end());
-    }
-
-    if (node != rootNode) {
-        splits.push_back(subtreeLeaves[node]);
-    }
-
-    // Return the leaves that this node can reach
-    return subtreeLeaves[node];
-}
-
 static std::vector<std::unordered_set<std::string>> getSplits(
     const std::vector<std::vector<uint64_t>> &adjList,
     const std::unordered_map<uint64_t, std::string> &leafName
@@ -65,7 +38,28 @@ static std::vector<std::unordered_set<std::string>> getSplits(
     std::vector<std::unordered_set<std::string>> splits;
     std::vector<std::unordered_set<std::string>> subtreeLeaves(adjList.size());
 
-    dfs(root, root, adjList, leafName, subtreeLeaves, splits);
+    std::function<std::unordered_set<std::string>(int)> dfs = [&](int node) -> std::unordered_set<std::string> {
+        if (leafName.find(node) != leafName.end()) {
+            // Leaf is more or less a subtree of itself
+            subtreeLeaves[node].insert(leafName.at(node));
+            return subtreeLeaves[node];
+        }
+
+        for (const uint64_t &c : adjList[node]) {
+            // Get this node's children's subtree and the leaves that they each can reach
+            std::unordered_set<std::string> children = dfs(c);
+            subtreeLeaves[node].insert(children.begin(), children.end());
+        }
+
+        if (node != root) {
+            splits.push_back(subtreeLeaves[node]);
+        }
+
+        // Return the leaves that this node can reach
+        return subtreeLeaves[node];
+    };
+
+    dfs(root);
     return splits;
 }
 
