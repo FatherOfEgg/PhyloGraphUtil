@@ -108,7 +108,12 @@ static uint64_t rf_dist(
     return rf_distance;
 }
 
-float compare(const Graph &g1, const Graph &g2) {
+void compare(const Graph &g1, const Graph &g2) {
+    if (g1.leaves.size() != g2.leaves.size()) {
+        std::cerr << "Trees do not have the same number of leaves." << std::endl;
+        std::exit(1);
+    }
+
     std::unordered_set<std::string> leaves1;
     for (const auto &p : g1.leafName) {
         leaves1.insert(p.second);
@@ -129,11 +134,14 @@ float compare(const Graph &g1, const Graph &g2) {
         std::exit(1);
     }
 
-    // TODO: Figure out how to calculate max rf_dist in order to convert to %
     std::vector<uint64_t> dists;
 
     uint64_t dist = rf_dist(g1.adjList, g1.leafName, g2.adjList, g2.leafName);
     dists.push_back(dist);
 
-    return *std::min_element(dists.begin(), dists.end());
+    uint64_t smallestDist = *std::min_element(dists.begin(), dists.end());
+    size_t n = g1.leaves.size();
+    double percentage = static_cast<double>(smallestDist) / 2 * (n - 3) * 100;
+
+    std::cout << percentage << "% different (smallest RF dist: " << smallestDist << ")" << std::endl;
 }

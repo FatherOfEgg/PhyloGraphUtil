@@ -249,7 +249,7 @@ static void subcommandCompare(int argc, char **argv) {
         openENWK(g2, input2);
     }
 
-    std::cout << "Smallest RF Distance: " << compare(g1, g2) << std::endl;
+    compare(g1, g2);
 }
 
 static void printPrintUsage() {
