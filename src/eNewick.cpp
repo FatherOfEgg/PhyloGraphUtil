@@ -81,6 +81,11 @@ static std::vector<Token> tokenize(std::ifstream &f) {
                 n = f.peek();
             }
 
+            if (tokens.back().type == TokenType::OPEN_PARENTHESIS
+            ||  tokens.back().type == TokenType::HYBRID_ID) {
+                tokens.push_back({TokenType::LEAF_NAME, ""});
+            }
+
             tokens.push_back({TokenType::HYBRID_ID, hybrid_id});
         } else if (c == '(') {
             tokens.push_back({TokenType::OPEN_PARENTHESIS, "("});
@@ -108,37 +113,79 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     uint64_t curIndex = 0;
     std::stack<uint64_t> edgeTargets;
     std::stack<uint64_t> numChildren;
-    std::unordered_set<std::string> hybrids;
+    std::unordered_map<std::string, uint64_t> hybrids;
 
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == TokenType::LEAF_NAME) {
-            g.addNode();
+            if (tokens[i + 1].type == TokenType::HYBRID_ID) {
+                auto it = hybrids.find(tokens[i + 1].value);
+                if (it != hybrids.end()) {
+                    edgeTargets.push(hybrids[tokens[i + 1].value]);
+                } else {
+                    g.addNode();
+                    edgeTargets.push(curIndex);
 
-            edgeTargets.push(curIndex);
+                    hybrids[tokens[i + 1].value] = curIndex;
+                    g.reticulations[curIndex];
 
-            g.leaves.push_back(curIndex);
-            g.leafName[curIndex] = tokens[i].value;
+                    curIndex++;
+                }
 
-            curIndex++;
-            numChildren.top()++;
-        } else if (tokens[i].type == TokenType::HYBRID_ID) {
-            if (tokens[i - 1].type == TokenType::LEAF_NAME) {
+                i++;
+            } else {
+                // if (tokens[i - 1].type == TokenType::OPEN_PARENTHESIS
+                // && tokens[i + 1].type == TokenType::CLOSE_PARENTHESIS
+                // && tokens[i + 3].type == TokenType::HYBRID_ID) {
+                //     hybrids[tokens[i + 3].value] = curIndex;
+                //     g.reticulations[curIndex];
+                //     numChildren.pop();
+                // }
 
+                g.addNode();
+                edgeTargets.push(curIndex);
+
+                g.leaves.push_back(curIndex);
+                g.leafName[curIndex] = tokens[i].value;
+
+                curIndex++;
             }
 
+            numChildren.top()++;
         } else if (tokens[i].type == TokenType::INTERNAL_NAME) {
             for (unsigned int c = 0; c < numChildren.top(); c++) {
                 g.addEdge(curIndex, edgeTargets.top());
+
+                auto it = g.reticulations.find(edgeTargets.top());
+                if (it != g.reticulations.end()) {
+                    g.reticulations[edgeTargets.top()].push_back(curIndex);
+                }
+
                 edgeTargets.pop();
             }
 
             numChildren.pop();
 
-            g.addNode();
+            if (tokens[i + 1].type == TokenType::HYBRID_ID) {
+                auto it = hybrids.find(tokens[i + 1].value);
+                if (it != hybrids.end()) {
+                    edgeTargets.push(hybrids[tokens[i + 1].value]);
+                } else {
+                    g.addNode();
+                    edgeTargets.push(curIndex);
 
-            edgeTargets.push(curIndex);
+                    hybrids[tokens[i + 1].value] = curIndex;
+                    g.reticulations[curIndex];
 
-            curIndex++;
+                    curIndex++;
+                }
+
+                i++;
+            } else {
+                g.addNode();
+                edgeTargets.push(curIndex);
+
+                curIndex++;
+            }
 
             if (!numChildren.empty()) {
                 numChildren.top()++;
@@ -216,32 +263,6 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 //
 //     return res;
 // }
-
-static void refactorHybrids(Graph &g, std::vector<Token> &tokens) {
-    std::unordered_set<std::string> hybrids;
-
-    auto it = tokens.begin();
-
-    // (A,B,((C,(Y)x#H1),(x#H1,D)));
-    while (it != tokens.end()) {
-        if (it->type == TokenType::HYBRID_ID) {
-            if (hybrids.find(it->value) == hybrids.end()) {
-                hybrids.insert(it->value);
-            } else {
-                if ((it - 1)->type == TokenType::LEAF_NAME) {
-
-                }
-            }
-        } else {
-            it++;
-        }
-    }
-    for (const auto &t : tokens) {
-        if (t.type == TokenType::HYBRID_ID) {
-            std::cout << t.value << std::endl;
-        }
-    }
-}
 
 void openENWK(Graph &g, const std::string &file) {
     std::ifstream f(file);
