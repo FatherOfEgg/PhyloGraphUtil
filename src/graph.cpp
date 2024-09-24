@@ -61,6 +61,14 @@ void Graph::print() const {
 
     std::cout << "]" << std::endl;
 
+    std::cout << "Leaf nodes: [" << std::endl;
+
+    for (const auto &p : leafName) {
+        std::cout << "    " << p.first << ": " << p.second << "," << std::endl;
+    }
+
+    std::cout << "]" << std::endl;
+
     std::cout << std::endl;
 
     std::cout << "NumNodes: " << getNumNodes() << std::endl;
