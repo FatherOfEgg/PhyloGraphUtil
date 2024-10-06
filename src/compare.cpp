@@ -1,10 +1,12 @@
 #include "compare.h"
+#include "lap.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -174,17 +176,58 @@ void compare(const Graph &g1, const Graph &g2) {
     auto splits1 = getSplits(g1);
     auto splits2 = getSplits(g2);
 
-    std::vector<uint64_t> dists;
+    size_t n = splits1.size();
+    size_t m = splits2.size();
+    size_t size = std::max(n, m);
 
-    for (const auto &s1 : splits2) {
-        for (const auto &s2 : splits2) {
-            dists.push_back(rf_dist(s1, s2));
+    std::vector<std::vector<double>> costMatrix(size, std::vector<double>(size, 0.0));
+
+    uint64_t minDist = std::numeric_limits<uint64_t>::max();
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < m; j++) {
+            uint64_t dist = rf_dist(splits1[i], splits2[j]);
+            
+            // If we find a perfect match
+            if (dist == 0) {
+                std::cout << "0% different (smallest RF dist: 0)" << std::endl;
+                return;
+            }
+
+            costMatrix[i][j] = static_cast<double>(dist);
+
+            if (dist < minDist) {
+                minDist = dist;
+            }
         }
     }
 
-    uint64_t smallestDist = *std::min_element(dists.begin(), dists.end());
-    size_t n = g1.leaves.size();
-    double percentage = static_cast<double>(smallestDist) / 2 * (n - 3) * 100;
+    // Pad with double::max if the matrix is not square
+    double doubleMax = std::numeric_limits<double>::max();
+    for (size_t i = n; i < size; i++) {
+        std::fill(costMatrix[i].begin(), costMatrix[i].end(), doubleMax);
+    }
+    for (size_t i = 0; i < n; i++) {
+        std::fill(costMatrix[i].begin() + m, costMatrix[i].end(), doubleMax);
+    }
 
-    std::cout << percentage << "% different (smallest RF dist: " << smallestDist << ")" << std::endl;
+    std::vector<int> rowsol(size);
+    std::vector<int> colsol(size);
+    std::vector<double> u(size);
+    std::vector<double> v(size);
+
+    lap(size, costMatrix, rowsol, colsol, u, v);
+
+    for (size_t i = 0; i < n; i++) {
+        // Check if it's a valid assignment
+        if (rowsol[i] < m) {
+            uint64_t dist = static_cast<uint64_t>(costMatrix[i][rowsol[i]]);
+            minDist = std::min(minDist, dist);
+        }
+    }
+
+    size_t leaves = g1.leaves.size();
+    double maxRFDist = 2 * (leaves - 2);
+    double percentage = (static_cast<double>(minDist) / maxRFDist) * 100;
+
+    std::cout << percentage << "% different (smallest RF dist: " << minDist << ")" << std::endl;
 }
