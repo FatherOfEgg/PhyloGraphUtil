@@ -63,6 +63,8 @@ void Graph::print() const {
 
     std::cout << std::endl;
 
+    std::cout << "NumLeaves: " << leaves.size() << std::endl;
+    std::cout << "NumReticulations: " << reticulations.size() << std::endl;
     std::cout << "NumNodes: " << getNumNodes() << std::endl;
     std::cout << "NumEdges: " << getNumEdges() << std::endl;
 }
