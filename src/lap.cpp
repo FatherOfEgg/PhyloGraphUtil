@@ -35,7 +35,14 @@
 // colsol     - row assigned to column in solution
 // u          - dual variables, row reduction numbers
 // v          - dual variables, column reduction numbers
-cost lap(int dim, cost **assigncost, col *rowsol, row *colsol, cost *u, cost *v) {
+cost lap(
+    int dim,
+    const std::vector<std::vector<cost>> &assigncost,
+    std::vector<col> &rowsol,
+    std::vector<row> &colsol,
+    std::vector<cost> &u,
+    std::vector<cost> &v
+) {
     bool unassignedfound;
     row i, imin, numfree = 0, prvnumfree, f, i0, k, freerow, *pred, *freeunassigned;
     col j, j1, j2, endofpath, last, low, up, *collist, *matches;

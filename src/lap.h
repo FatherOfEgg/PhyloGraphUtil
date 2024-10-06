@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <vector>
+
 /*************** CONSTANTS  *******************/
 
 #define BIG 1.79769e+308 // max value for double
@@ -30,4 +32,11 @@ typedef double cost;
 
 /*************** FUNCTIONS  *******************/
 
-extern cost lap(int dim, cost **assigncost, col *rowsol, row *colsol, cost *u, cost *v);
+extern cost lap(
+    int dim,
+    const std::vector<std::vector<cost>> &assigncost,
+    std::vector<col> &rowsol,
+    std::vector<row> &colsol,
+    std::vector<cost> &u,
+    std::vector<cost> &v
+);
