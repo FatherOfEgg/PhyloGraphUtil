@@ -1,18 +1,14 @@
 #include "eNewick.h"
 #include "graph.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <set>
 #include <stack>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
-#include <utility>
 #include <vector>
 
 enum class TokenType {

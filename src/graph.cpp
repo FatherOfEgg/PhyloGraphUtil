@@ -1,10 +1,8 @@
 #include "graph.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
-#include <iterator>
 #include <vector>
 
 void Graph::addNode() {
@@ -44,29 +42,23 @@ void Graph::print() const {
         }
 
         std::cout << ": [";
-
         for (const auto &t : adjList[i]) {
             std::cout << t << ", ";
         }
-
         std::cout << "]" << std::endl;
     }
     std::cout << std::endl;
 
     std::cout << "Reticulations: [";
-
     for (const auto &p : reticulations) {
         std::cout << p.first << ", ";
     }
-
     std::cout << "]" << std::endl;
 
     std::cout << "Leaf nodes: [" << std::endl;
-
     for (const auto &p : leafName) {
         std::cout << "    " << p.first << ": " << p.second << "," << std::endl;
     }
-
     std::cout << "]" << std::endl;
 
     std::cout << std::endl;
