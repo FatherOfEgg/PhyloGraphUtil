@@ -115,37 +115,35 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
     for (size_t i = 0; i < tokens.size(); i++) {
         if (tokens[i].type == TokenType::HYBRID_ID) {
+            if (isLeafHybrid) {
+                numChildren.pop();
+            }
+
             auto it = hybrids.find(tokens[i].value);
             if (it != hybrids.end()) {
                 edgeTargets.push(it->second);
-                numChildren.top()++;
-                continue;
-            }
-
-            g.addNode();
-            edgeTargets.push(curIndex);
-
-            if (tokens[i - 1].type == TokenType::LEAF_NAME
-            ||  isLeafHybrid) {
-                numChildren.pop();
-
-                g.leaves.push_back(curIndex);
 
                 if (isLeafHybrid) {
+                    g.leaves.push_back(it->second);
+                    g.leafName[it->second] = tokens[i - 3].value;
+                }
+            } else {
+                g.addNode();
+                edgeTargets.push(curIndex);
+
+                if (isLeafHybrid) {
+                    g.leaves.push_back(curIndex);
                     g.leafName[curIndex] = tokens[i - 3].value;
-                } else {
-                    g.leafName[curIndex] = tokens[i - 1].value;
                 }
 
                 g.reticulations[curIndex];
+                hybrids[tokens[i].value] = curIndex;
 
-                isLeafHybrid = false;
+                curIndex++;
             }
 
-            hybrids[tokens[i].value] = curIndex;
-
-            curIndex++;
             numChildren.top()++;
+            isLeafHybrid = false;
         } else if (tokens[i].type == TokenType::LEAF_NAME) {
             if (tokens[i - 1].type == TokenType::OPEN_PARENTHESIS
             &&  tokens[i + 1].type == TokenType::CLOSE_PARENTHESIS
