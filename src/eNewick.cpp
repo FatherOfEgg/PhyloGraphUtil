@@ -113,79 +113,89 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     uint64_t curIndex = 0;
     std::stack<uint64_t> edgeTargets;
     std::stack<uint64_t> numChildren;
+
+    bool isLeafHybrid = false;
     std::unordered_map<std::string, uint64_t> hybrids;
 
     for (size_t i = 0; i < tokens.size(); i++) {
-        if (tokens[i].type == TokenType::LEAF_NAME) {
-            if (tokens[i + 1].type == TokenType::HYBRID_ID) {
-                auto it = hybrids.find(tokens[i + 1].value);
-                if (it != hybrids.end()) {
-                    edgeTargets.push(hybrids[tokens[i + 1].value]);
-                } else {
-                    g.addNode();
-                    edgeTargets.push(curIndex);
+        if (tokens[i].type == TokenType::HYBRID_ID) {
+            auto it = hybrids.find(tokens[i].value);
+            if (it != hybrids.end()) {
+                edgeTargets.push(it->second);
+                numChildren.top()++;
+                continue;
+            }
 
-                    hybrids[tokens[i + 1].value] = curIndex;
-                    g.reticulations[curIndex];
+            g.addNode();
+            edgeTargets.push(curIndex);
 
-                    curIndex++;
-                }
-
-                i++;
-            } else {
-                // if (tokens[i - 1].type == TokenType::OPEN_PARENTHESIS
-                // && tokens[i + 1].type == TokenType::CLOSE_PARENTHESIS
-                // && tokens[i + 3].type == TokenType::HYBRID_ID) {
-                //     hybrids[tokens[i + 3].value] = curIndex;
-                //     g.reticulations[curIndex];
-                //     numChildren.pop();
-                // }
-
-                g.addNode();
-                edgeTargets.push(curIndex);
+            if (tokens[i - 1].type == TokenType::LEAF_NAME
+            ||  isLeafHybrid) {
+                numChildren.pop();
 
                 g.leaves.push_back(curIndex);
-                g.leafName[curIndex] = tokens[i].value;
 
-                curIndex++;
+                if (isLeafHybrid) {
+                    g.leafName[curIndex] = tokens[i - 3].value;
+                } else {
+                    g.leafName[curIndex] = tokens[i - 1].value;
+                }
+
+                g.reticulations[curIndex];
+
+                isLeafHybrid = false;
             }
+
+            hybrids[tokens[i].value] = curIndex;
+
+            curIndex++;
+            numChildren.top()++;
+        } else if (tokens[i].type == TokenType::LEAF_NAME) {
+            if (tokens[i - 1].type == TokenType::OPEN_PARENTHESIS
+            &&  tokens[i + 1].type == TokenType::CLOSE_PARENTHESIS
+            &&  tokens[i + 3].type == TokenType::HYBRID_ID) {
+                isLeafHybrid = true;
+                i += 2;
+                continue;
+            }
+
+            if (tokens[i + 1].type == TokenType::HYBRID_ID) {
+                continue;
+            }
+
+            g.addNode();
+            edgeTargets.push(curIndex);
+
+            g.leaves.push_back(curIndex);
+            g.leafName[curIndex] = tokens[i].value;
+
+            curIndex++;
 
             numChildren.top()++;
         } else if (tokens[i].type == TokenType::INTERNAL_NAME) {
             for (unsigned int c = 0; c < numChildren.top(); c++) {
-                g.addEdge(curIndex, edgeTargets.top());
+                uint64_t target = edgeTargets.top();
 
-                auto it = g.reticulations.find(edgeTargets.top());
+                g.addEdge(curIndex, target);
+
+                auto it = g.reticulations.find(target);
                 if (it != g.reticulations.end()) {
-                    g.reticulations[edgeTargets.top()].push_back(curIndex);
+                    g.reticulations[target].push_back(curIndex);
                 }
 
                 edgeTargets.pop();
             }
 
+            if (tokens[i + 1].type == TokenType::SEMI_COLON) {
+                continue;
+            }
+
             numChildren.pop();
 
-            if (tokens[i + 1].type == TokenType::HYBRID_ID) {
-                auto it = hybrids.find(tokens[i + 1].value);
-                if (it != hybrids.end()) {
-                    edgeTargets.push(hybrids[tokens[i + 1].value]);
-                } else {
-                    g.addNode();
-                    edgeTargets.push(curIndex);
+            g.addNode();
+            edgeTargets.push(curIndex);
 
-                    hybrids[tokens[i + 1].value] = curIndex;
-                    g.reticulations[curIndex];
-
-                    curIndex++;
-                }
-
-                i++;
-            } else {
-                g.addNode();
-                edgeTargets.push(curIndex);
-
-                curIndex++;
-            }
+            curIndex++;
 
             if (!numChildren.empty()) {
                 numChildren.top()++;
