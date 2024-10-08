@@ -108,13 +108,22 @@ static std::vector<std::pair<uint64_t, uint64_t>> pathVectorsHelper(const Graph 
 }
 
 void findPathVectors(const Graph &g1, const Graph &g2) {
-    auto x = pathVectorsHelper(g1);
+    auto x1 = pathVectorsHelper(g1);
 
     size_t i = 0;
     for (uint64_t l : g1.leaves) {
         std::cout << g1.leafName.at(l) << " ";
-        std::cout << "Shortest: " << x[i].first << ", ";
-        std::cout << "Longest: " << x[i].second << std::endl;
+        std::cout << "Shortest: " << x1[i].first << ", ";
+        std::cout << "Longest: " << x1[i].second << std::endl;
+        i++;
+    }
+
+    auto x2 = pathVectorsHelper(g2);
+    i = 0;
+    for (uint64_t l : g2.leaves) {
+        std::cout << g2.leafName.at(l) << " ";
+        std::cout << "Shortest: " << x2[i].first << ", ";
+        std::cout << "Longest: " << x2[i].second << std::endl;
         i++;
     }
 }
