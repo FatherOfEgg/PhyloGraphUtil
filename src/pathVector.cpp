@@ -87,7 +87,7 @@ static std::vector<std::pair<uint64_t, uint64_t>> pathVectorsHelper(const Graph 
     }
 
     for (uint64_t n : topoOrder) {
-        // If this is not a root and we haven't reached it, skip it
+        // Continue if we haven't reached this non-root node yet
         if (shortestPaths[n] == INF) {
             continue;
         }
