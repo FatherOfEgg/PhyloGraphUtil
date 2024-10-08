@@ -88,7 +88,9 @@ static std::vector<std::pair<uint64_t, uint64_t>> pathVectorsHelper(const Graph 
 
     for (uint64_t vertex : topoOrder) {
         // If this is not a root and we haven't reached it, skip it
-        if (shortestPaths[vertex] == INF) continue;
+        if (shortestPaths[vertex] == INF) {
+            continue;
+        }
 
         for (uint64_t child : g.adjList[vertex]) {
             shortestPaths[child] = std::min(shortestPaths[child], shortestPaths[vertex] + 1);
