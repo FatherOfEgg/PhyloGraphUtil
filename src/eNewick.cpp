@@ -114,6 +114,9 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     std::unordered_map<std::string, uint64_t> hybrids;
 
     for (size_t i = 0; i < tokens.size(); i++) {
+        // I think it's just easier to handle the case where a
+        // hybrid is a leaf node "separately"
+        // (In HYBRID_ID instead of LEAF_NAME)
         if (tokens[i].type == TokenType::HYBRID_ID) {
             if (isLeafHybrid) {
                 numChildren.pop();
@@ -167,10 +170,26 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
             numChildren.top()++;
         } else if (tokens[i].type == TokenType::INTERNAL_NAME) {
+            bool isHybrid = tokens[i + 1].type == TokenType::HYBRID_ID;
+            auto hybridIt = hybrids.find(tokens[i + 1].value);
+
+            if (isHybrid && hybridIt == hybrids.end()) {
+                g.addNode();
+
+                g.reticulations[curIndex];
+                hybrids[tokens[i + 1].value] = curIndex;
+
+                curIndex++;
+            }
+
             for (unsigned int c = 0; c < numChildren.top(); c++) {
                 uint64_t target = edgeTargets.top();
 
-                g.addEdge(curIndex, target);
+                if (isHybrid) {
+                    g.addEdge(hybrids.at(tokens[i + 1].value), target);
+                } else {
+                    g.addEdge(curIndex, target);
+                }
 
                 auto it = g.reticulations.find(target);
                 if (it != g.reticulations.end()) {
@@ -186,10 +205,16 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
             numChildren.pop();
 
-            g.addNode();
-            edgeTargets.push(curIndex);
+            if (isHybrid) {
+                edgeTargets.push(hybrids.at(tokens[i + 1].value));
 
-            curIndex++;
+                i++;
+            } else {
+                g.addNode();
+                edgeTargets.push(curIndex);
+
+                curIndex++;
+            }
 
             if (!numChildren.empty()) {
                 numChildren.top()++;
