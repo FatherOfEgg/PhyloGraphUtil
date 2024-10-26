@@ -1,4 +1,4 @@
-#include "compare.h"
+#include "robinsonFoulds.h"
 #include "lap.h"
 
 #include <algorithm>
