@@ -31,6 +31,14 @@ unsigned int Graph::getNumEdges() const {
     return total;
 }
 
+void Graph::open(const std::string &file) {
+
+}
+
+void Graph::save(Format f, const std::string &filename) const {
+
+}
+
 void Graph::print() const {
     for (size_t i = 0; i < adjList.size(); i++) {
         std::cout << i;
