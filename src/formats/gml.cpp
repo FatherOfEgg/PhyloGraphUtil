@@ -1,5 +1,5 @@
 #include "gml.h"
-#include "graph.h"
+#include "../graph.h"
 
 #include <cctype>
 #include <cstdint>

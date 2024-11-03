@@ -1,5 +1,5 @@
 #include "eNewick.h"
-#include "graph.h"
+#include "../graph.h"
 
 #include <cstdint>
 #include <cstdio>
