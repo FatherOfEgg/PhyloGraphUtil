@@ -1,6 +1,6 @@
 #pragma once
 
-enum class Format {
+enum class FormatType {
     GML,
     ENWK,
     NUM
