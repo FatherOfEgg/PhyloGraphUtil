@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "formats/formats.h"
+#include "formats/formatType.h"
 
 struct Graph {
 public:
@@ -16,7 +16,7 @@ public:
     unsigned int getNumEdges() const;
 
     void open(const std::string &file);
-    void save(Format f, const std::string &filename) const;
+    void save(FormatType f, const std::string &filename) const;
 
     void print() const;
 
@@ -28,5 +28,5 @@ public:
     // The vec contains the reticulation's parents
     std::unordered_map<uint64_t, std::vector<uint64_t>> reticulations;
 
-    Format format;
+    FormatType format;
 };
