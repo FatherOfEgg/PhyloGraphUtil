@@ -16,21 +16,6 @@ static bool isValidFormat(const std::string &format) {
     return it != std::end(formatStrings);
 }
 
-// static void printFormats() {
-//     std::cout << "FORMATS:" << std::endl;
-//     std::cout << "\t";
-//
-//     for (size_t i = 0; i < ARRAY_LENGTH(formatStrings); i++) {
-//         std::cout << formatStrings[i];
-//
-//         if (i < ARRAY_LENGTH(formatStrings) - 1) {
-//             std::cout << ", ";
-//         }
-//     }
-//
-//     std::cout << "." << std::endl;
-// }
-
 // static std::string filenameNoExt(const std::string &file) {
 //     size_t dotPos = file.find_last_of(".");
 //

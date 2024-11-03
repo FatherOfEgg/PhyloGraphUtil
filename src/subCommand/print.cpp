@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "../graph.h"
+#include "../formats/format.h"
 
 static void printUsage() {
     std::cout << "PhyloGraphUtil print" << std::endl;
@@ -14,7 +15,7 @@ static void printUsage() {
     std::cout << "FLAGS:" << std::endl;
     std::cout << "\t-h\tPrints help information." << std::endl;
     std::cout << std::endl;
-    // printFormats();
+    printFormats();
 }
 
 void print(int argc, char **argv) {

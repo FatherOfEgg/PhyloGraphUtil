@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "../formats/format.h"
+
 static void compareUsage() {
     std::cout << "PhyloGraphUtil compare" << std::endl;
     std::cout << "Compares one graph to another using Robinson Foulds distance." << std::endl;
@@ -12,7 +14,7 @@ static void compareUsage() {
     std::cout << "FLAGS:" << std::endl;
     std::cout << "\t-h\tPrints help information." << std::endl;
     std::cout << std::endl;
-    // printFormats();
+    printFormats();
 }
 
 void compare(int argc, char **argv) {

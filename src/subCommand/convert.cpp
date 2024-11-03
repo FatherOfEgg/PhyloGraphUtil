@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "../formats/format.h"
+
 static void convertUsage() {
     std::cout << "PhyloGraphUtil convert" << std::endl;
     std::cout << "Converts from one graph format to another." << std::endl;
@@ -17,7 +19,7 @@ static void convertUsage() {
     std::cout << "\tYou can supply a 4th argument to specify the directory/name of the output." << std::endl;
     std::cout << "\tDefaults to <INPUT>, but with <FORMAT2>'s extension." << std::endl;
     std::cout << std::endl;
-    // printFormats();
+    printFormats();
 }
 
 void convert(int argc, char **argv) {
