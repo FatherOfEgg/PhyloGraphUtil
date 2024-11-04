@@ -5,4 +5,4 @@
 #include "../graph.h"
 
 void openGML(Graph &g, const std::string &file);
-void saveGML(Graph &g, const std::string &filename);
+void saveGML(const Graph &g, const std::string &filename);

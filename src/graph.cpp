@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#include "formats/format.h"
+
 void Graph::addNode() {
     adjList.emplace_back();
 }
@@ -36,7 +38,7 @@ void Graph::open(const std::string &file) {
 }
 
 void Graph::save(FormatType f, const std::string &filename) const {
-
+    formats[static_cast<size_t>(f)].save(*this, filename);
 }
 
 void Graph::print() const {

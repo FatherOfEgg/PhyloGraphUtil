@@ -310,7 +310,7 @@ void openENWK(Graph &g, const std::string &file) {
     }
 }
 
-void saveENWK(Graph &g, const std::string &filename) {
+void saveENWK(const Graph &g, const std::string &filename) {
     // std::cout << "\nSaving as ENewick" << std::endl;
     //
     // std::vector<std::string> roots = getRoot(g);
