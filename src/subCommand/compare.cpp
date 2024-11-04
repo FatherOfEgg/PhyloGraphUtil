@@ -1,5 +1,6 @@
 #include "compare.h"
 
+#include <cstring>
 #include <iostream>
 
 #include "../formats/format.h"

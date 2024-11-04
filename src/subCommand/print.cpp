@@ -1,5 +1,6 @@
 #include "print.h"
 
+#include <cstring>
 #include <iostream>
 
 #include "../graph.h"

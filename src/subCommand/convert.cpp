@@ -1,6 +1,7 @@
 #include "convert.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <string>
 
