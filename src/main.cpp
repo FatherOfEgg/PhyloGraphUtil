@@ -1,20 +1,7 @@
-#include "subCommand/subCommand.h"
-#include <algorithm>
-#include <cstring>
 #include <iostream>
 #include <string>
-#include <vector>
 
-const std::string formatStrings[] = {
-    "GML",
-    "ENWK",
-};
-
-
-static bool isValidFormat(const std::string &format) {
-    auto it = std::find(std::begin(formatStrings), std::end(formatStrings), format);
-    return it != std::end(formatStrings);
-}
+#include "subCommand/subCommand.h"
 
 static void printUsage() {
     std::cout << "PhyloGraphUtil" << std::endl;
