@@ -35,7 +35,7 @@ void Graph::open(const std::string &file) {
 
 }
 
-void Graph::save(Format f, const std::string &filename) const {
+void Graph::save(FormatType f, const std::string &filename) const {
 
 }
 
