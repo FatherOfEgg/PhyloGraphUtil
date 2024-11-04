@@ -10,7 +10,7 @@ static void printUsage() {
     std::cout << "Prints basic info of the read-in graph(s)." << std::endl;
     std::cout << std::endl;
     std::cout << "USAGE:" << std::endl;
-    std::cout << "\tPhyloGraphUtil print <FORMAT 1> <FILE 1> <FORMAT2>..." << std::endl;
+    std::cout << "\tPhyloGraphUtil print <FILE 1> <FILE 2>..." << std::endl;
     std::cout << std::endl;
     std::cout << "FLAGS:" << std::endl;
     std::cout << "\t-h\tPrints help information." << std::endl;
@@ -30,26 +30,9 @@ void print(int argc, char **argv) {
             std::exit(0);
         }
 
-        // if (!isValidFormat(argv[i])) {
-        //     std::cerr << "'" << argv[i] << "' is not a valid format." << std::endl;
-        //     std::exit(1);
-        // }
-
-        if (i + 1 >= argc) {
-            std::cerr << "Did not supply a '" << argv[i] << "' file." << std::endl;
-            printUsage();
-            std::exit(1);
-        }
-
         Graph g;
 
-        if (!strcmp(argv[i], "GML")) {
-            openGML(g, argv[i + 1]);
-        } else if (!strcmp(argv[i], "ENWK")) {
-            openENWK(g, argv[i + 1]);
-        }
-
-        i++;
+        g.open(argv[i]);
 
         std::cout << "'" << argv[i] << "':" << std::endl;
         g.print();

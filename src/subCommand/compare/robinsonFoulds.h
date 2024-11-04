@@ -2,4 +2,4 @@
 
 #include "../../graph.h"
 
-void compare(const Graph &g1, const Graph &g2);
+void robinsonFoulds(const Graph &g1, const Graph &g2);

@@ -16,22 +16,6 @@ static bool isValidFormat(const std::string &format) {
     return it != std::end(formatStrings);
 }
 
-// static std::string filenameNoExt(const std::string &file) {
-//     size_t dotPos = file.find_last_of(".");
-//
-//     if (dotPos == std::string::npos) {
-//         return file;
-//     }
-//
-//     size_t lastSlash = file.find_last_of("/\\");
-//
-//     if (dotPos > lastSlash) {
-//         return file.substr(0, dotPos);
-//     } else {
-//         return file;
-//     }
-// }
-
 static void printUsage() {
     std::cout << "PhyloGraphUtil" << std::endl;
     std::cout << std::endl;
