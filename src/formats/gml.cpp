@@ -53,7 +53,7 @@ static std::vector<Token> tokenize(std::ifstream &f) {
                 t = TokenType::NODE;
             } else if (word == "edge") {
                 t = TokenType::EDGE;
-            } else if (tokens.back().type == TokenType::ATTRIBUTE_NAME) {
+            } else if (!tokens.empty() && tokens.back().type == TokenType::ATTRIBUTE_NAME) {
                 t = TokenType::ATTRIBUTE_STRING;
             } else {
                 t = TokenType::ATTRIBUTE_NAME;
