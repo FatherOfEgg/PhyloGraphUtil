@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#include "formats/format.h"
+
 void Graph::addNode() {
     adjList.emplace_back();
 }
@@ -29,6 +31,22 @@ unsigned int Graph::getNumEdges() const {
     }
 
     return total;
+}
+
+void Graph::open(const std::string &file) {
+    for (const auto &f : formats) {
+        if (f.open(*this, file)) {
+            return;
+        }
+    }
+
+    std::cerr << "Couldn't open '" << file << "'" << std::endl;
+    printFormats();
+    std::exit(1);
+}
+
+void Graph::save(FormatType f, const std::string &filename) const {
+    formats[static_cast<size_t>(f)].save(*this, filename);
 }
 
 void Graph::print() const {

@@ -1,5 +1,5 @@
 #include "gml.h"
-#include "graph.h"
+#include "../graph.h"
 
 #include <cctype>
 #include <cstdint>
@@ -53,7 +53,7 @@ static std::vector<Token> tokenize(std::ifstream &f) {
                 t = TokenType::NODE;
             } else if (word == "edge") {
                 t = TokenType::EDGE;
-            } else if (tokens.back().type == TokenType::ATTRIBUTE_NAME) {
+            } else if (!tokens.empty() && tokens.back().type == TokenType::ATTRIBUTE_NAME) {
                 t = TokenType::ATTRIBUTE_STRING;
             } else {
                 t = TokenType::ATTRIBUTE_NAME;
@@ -199,24 +199,20 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     return true;
 }
 
-void openGML(Graph &g, const std::string &file) {
+bool openGML(Graph &g, const std::string &file) {
     std::ifstream f(file);
 
     if (!f.is_open()) {
-        std::cerr << "Couldn't open `" << file << "`." << std::endl;
-        std::exit(1);
+        return false;
     }
 
     std::vector<Token> tokens = tokenize(f);
     f.close();
 
-    if (!parse(g, tokens)) {
-        std::cerr << "'" << file << "' is not a valid GML file." << std::endl;
-        std::exit(1);
-    }
+    return parse(g, tokens);
 }
 
-void saveGML(Graph &g, const std::string &filename) {
+void saveGML(const Graph &g, const std::string &filename) {
     std::ofstream f(filename);
 
     if (!f) {

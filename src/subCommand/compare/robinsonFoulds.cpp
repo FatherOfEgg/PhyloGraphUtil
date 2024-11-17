@@ -1,4 +1,4 @@
-#include "compare.h"
+#include "robinsonFoulds.h"
 #include "lap.h"
 
 #include <algorithm>
@@ -147,7 +147,7 @@ static uint64_t rf_dist(
     return rf_distance;
 }
 
-void compare(const Graph &g1, const Graph &g2) {
+void robinsonFoulds(const Graph &g1, const Graph &g2) {
     if (g1.leaves.size() != g2.leaves.size()) {
         std::cerr << "Trees do not have the same number of leaves." << std::endl;
         std::exit(1);
