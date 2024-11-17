@@ -293,21 +293,17 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 //     return res;
 // }
 
-void openENWK(Graph &g, const std::string &file) {
+bool openENWK(Graph &g, const std::string &file) {
     std::ifstream f(file);
 
     if (!f.is_open()) {
-        std::cerr << "Couldn't open `" << file << "`." << std::endl;
-        std::exit(1);
+        return false;
     }
 
     std::vector<Token> tokens = tokenize(f);
     f.close();
 
-    if (!parse(g, tokens)) {
-        std::cerr << "'" << file << "' is not a valid Extended Newick file." << std::endl;
-        std::exit(1);
-    }
+    return parse(g, tokens);
 }
 
 void saveENWK(const Graph &g, const std::string &filename) {

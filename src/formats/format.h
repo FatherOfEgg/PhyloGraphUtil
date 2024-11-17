@@ -8,7 +8,7 @@
 struct Format {
     FormatType format;
     std::string name;
-    void (*open)(Graph &, const std::string &);
+    bool (*open)(Graph &, const std::string &);
     void (*save)(const Graph &, const std::string &);
 };
 
