@@ -36,6 +36,7 @@ unsigned int Graph::getNumEdges() const {
 void Graph::open(const std::string &file) {
     for (const auto &f : formats) {
         if (f.open(*this, file)) {
+            format = f.format;
             return;
         }
     }
