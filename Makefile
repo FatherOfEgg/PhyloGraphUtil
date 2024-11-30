@@ -2,7 +2,7 @@
 
 TARGET = PhyloGraphUtil
 CC = g++
-CFLAGS += -O2 -Wall
+CFLAGS += -O2 -Wall -std=c++17
 
 # Define a recursive wildcard function
 rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
