@@ -5,10 +5,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 enum class TokenType {
@@ -227,72 +230,6 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     return true;
 }
 
-// std::unordered_map<std::string, std::string> getHybrids(const Graph &g) {
-//     std::unordered_map<std::string, std::string> hybrids;
-//     std::unordered_map<std::string, unsigned int> incomingCount;
-//
-//     for (const auto &e : g.edges) {
-//         for (const auto &x : e.second) {
-//             incomingCount[x.target]++;
-//         }
-//     }
-//
-//     unsigned int hybridID = 1;
-//     for (const auto &n : incomingCount) {
-//         if (n.second >= 2) {
-//             hybrids[n.first] = "#H" + std::to_string(hybridID);
-//         }
-//     }
-//
-//     return hybrids;
-// }
-//
-// std::string dfs(
-//     const Graph &g,
-//     const std::string &nodeID,
-//     const std::unordered_map<std::string,
-//     std::string> &hybrids,
-//     bool includeInternalNames
-// ) {
-//     auto it = g.edges.find(nodeID);
-//     if (it == g.edges.end()
-//     ||  it->second.empty()) {
-//         auto n = std::find_if(
-//             g.nodes.begin(),
-//             g.nodes.end(),
-//             [&nodeID](const Node &node) {
-//                 return node.id == nodeID;
-//             }
-//         );
-//         return n->id;
-//     }
-//
-//     std::vector<Edge> neighbors = it->second;
-//     std::vector<std::string> out;
-//
-//     for (const auto &e : neighbors) {
-//         out.push_back(dfs(g, e.target, hybrids, includeInternalNames));
-//     }
-//
-//     std::string res = "(" + out[0];
-//
-//     for (size_t i = 1; i < out.size(); i++) {
-//         res += "," + out[1];
-//     }
-//     res += ")";
-//
-//     if (includeInternalNames) {
-//         res += nodeID;
-//     }
-//
-//     auto hybrid = hybrids.find(nodeID);
-//     if (hybrid != hybrids.end()) {
-//         res += hybrid->second;
-//     }
-//
-//     return res;
-// }
-
 bool openENWK(Graph &g, const std::string &file) {
     std::ifstream f(file);
 
@@ -306,18 +243,95 @@ bool openENWK(Graph &g, const std::string &file) {
     return parse(g, tokens);
 }
 
+static void nextHybridName(std::string &name) {
+    for (size_t i = name.length() - 1; i >= 0; i--) {
+        if (name[i] == 'z') {
+            name[i] = 'a';
+        } else {
+            name[i]++;
+            return;
+        }
+    }
+
+    name = "a" + name;
+}
+
+static std::unordered_map<uint64_t, std::string> assignHybridStr(const Graph &g) {
+    std::unordered_map<uint64_t, std::string> res;
+
+    uint64_t hybridId = 1;
+    std::string hybridName = "a";
+
+    for (const auto &r : g.reticulations) {
+        res[r.first] = hybridName + "#H" + std::to_string(hybridId);
+        hybridId++;
+        nextHybridName(hybridName);
+    }
+
+    return res;
+}
+
 void saveENWK(const Graph &g, const std::string &filename) {
-    // std::cout << "\nSaving as ENewick" << std::endl;
-    //
-    // std::vector<std::string> roots = getRoot(g);
-    //
-    // if (roots.empty()) {
-    //     std::cerr << "Failed to save to '" << filename << "'. Graph has no root."<< std::endl;
-    //     std::exit(1);
-    // }
-    //
-    // std::unordered_map<std::string, std::string> hybrids = getHybrids(g);
-    //
-    // std::string res = dfs(g, roots[0], hybrids, includeInternalNames);
-    // std::cout << res << ";" << std::endl;
+    std::ofstream f(filename);
+
+    if (!f) {
+        std::cerr << "Failed to save to '" << filename << "'."<< std::endl;
+        std::exit(1);
+    }
+
+    std::unordered_set<uint64_t> hybridFirstOccurrence;
+    std::unordered_map<uint64_t, std::string> hybridStr = assignHybridStr(g);
+
+    std::function<void (uint64_t)> dfs = [&](uint64_t node) {
+        auto leafIt = g.leafName.find(node);
+        bool isHybrid = g.reticulations.find(node) != g.reticulations.end();
+
+        if (leafIt != g.leafName.end()) {
+            if (isHybrid) {
+                bool isFirstOccurrence = hybridFirstOccurrence.find(node) == hybridFirstOccurrence.end();
+
+                if (isFirstOccurrence) {
+                    f << "(" << leafIt->second << ")";
+
+                    hybridFirstOccurrence.insert(node);
+                }
+
+                f << hybridStr.at(node);
+            } else {
+                f << leafIt->second;
+            }
+
+            return;
+        }
+
+        size_t numChildren = g.adjList[node].size();
+
+        if (numChildren != 0) {
+            f << "(";
+
+            for (size_t i = numChildren; i > 0; i--) {
+                dfs(g.adjList[node][i - 1]);
+
+                if (i != 1) {
+                    f << ",";
+                }
+            }
+
+            f << ")";
+        }
+
+        // if (includeInternalNames) {
+        //     res += nodeID;
+        // }
+
+        if (isHybrid) {
+            f << hybridStr.at(node);
+        }
+    };
+
+
+    dfs(g.root);
+    f << ";";
+
+    f.close();
 }
