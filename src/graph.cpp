@@ -1,5 +1,6 @@
 #include "graph.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
@@ -33,10 +34,30 @@ unsigned int Graph::getNumEdges() const {
     return total;
 }
 
+static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
+    std::vector<uint64_t> inDegree(adjList.size());
+
+    for (const auto &n : adjList) {
+        for (const auto &t : n) {
+            inDegree[t]++;
+        }
+    }
+
+    auto it = std::find(inDegree.begin(), inDegree.end(), 0);
+
+    if (it == inDegree.end()) {
+        std::cerr << "Couldn't find root." << std::endl;
+        std::exit(1);
+    }
+
+    return std::distance(inDegree.begin(), it);
+}
+
 void Graph::open(const std::string &file) {
     for (const auto &f : formats) {
         if (f.open(*this, file)) {
             format = f.format;
+            root = getRoot(adjList);
             return;
         }
     }

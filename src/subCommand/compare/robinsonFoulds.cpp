@@ -13,31 +13,10 @@
 #include <utility>
 #include <vector>
 
-static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
-    std::vector<uint64_t> inDegree(adjList.size());
-
-    for (const auto &n : adjList) {
-        for (const auto &t : n) {
-            inDegree[t]++;
-        }
-    }
-
-    auto it = std::find(inDegree.begin(), inDegree.end(), 0);
-
-    if (it == inDegree.end()) {
-        std::cerr << "Couldn't find root." << std::endl;
-        std::exit(1);
-    }
-
-    return std::distance(inDegree.begin(), it);
-}
-
 static std::vector<std::unordered_set<std::string>> getSplitsHelper(
     const Graph &g,
     const std::unordered_map<uint64_t, uint8_t> &curEdges
 ) {
-    uint64_t root = getRoot(g.adjList);
-
     std::vector<std::unordered_set<std::string>> splits;
     std::vector<std::unordered_set<std::string>> subtreeLeaves(g.adjList.size());
 
@@ -67,7 +46,7 @@ static std::vector<std::unordered_set<std::string>> getSplitsHelper(
             subtreeLeaves[node].insert(children.begin(), children.end());
         }
 
-        if (node != root) {
+        if (node != g.root) {
             splits.push_back(subtreeLeaves[node]);
         }
 
@@ -75,7 +54,7 @@ static std::vector<std::unordered_set<std::string>> getSplitsHelper(
         return subtreeLeaves[node];
     };
 
-    dfs(root);
+    dfs(g.root);
     return splits;
 }
 
