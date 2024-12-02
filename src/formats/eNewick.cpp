@@ -57,7 +57,8 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             }
 
             TokenType t;
-            if (tokens.back().type == TokenType::CLOSE_PARENTHESIS) {
+            if (!tokens.empty()
+            &&  tokens.back().type == TokenType::CLOSE_PARENTHESIS) {
                 t = TokenType::INTERNAL_NAME;
             } else {
                 t = TokenType::LEAF_NAME;
