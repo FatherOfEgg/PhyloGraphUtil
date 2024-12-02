@@ -4,5 +4,6 @@ enum class FormatType {
     INVALID = -1,
     GML,
     ENWK,
+    ADMIX,
     NUM
 };

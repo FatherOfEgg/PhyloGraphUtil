@@ -5,6 +5,7 @@
 
 #include "gml.h"
 #include "eNewick.h"
+#include "admixture.h"
 
 Format formats[static_cast<size_t>(FormatType::NUM)] = {
     {
@@ -18,6 +19,12 @@ Format formats[static_cast<size_t>(FormatType::NUM)] = {
         "ENWK",
         openENWK,
         saveENWK
+    },
+    {
+        FormatType::ADMIX,
+        "ADMIX",
+        openADMIX,
+        saveADMIX
     }
 };
 
