@@ -86,7 +86,8 @@ static std::vector<Token> tokenize(std::ifstream &f) {
                 n = f.peek();
             }
 
-            if (tokens.back().type == TokenType::DIRECTED
+            if (!tokens.empty()
+            &&  tokens.back().type == TokenType::DIRECTED
             &&  std::stoi(num, nullptr) == 0) {
                 std::cerr << "GML graph is not directed. Please make sure it is directed." << std::endl;
                 std::exit(1);
