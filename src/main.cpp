@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 
+#include "formats/format.h"
 #include "subCommand/subCommand.h"
 
 static void printUsage() {
@@ -20,6 +21,9 @@ static void printUsage() {
         std::cout << "\t" << sc.desc;
         std::cout << std::endl;
     }
+    std::cout << std::endl;
+
+    printFormats();
 }
 
 int main(int argc, char **argv) {
