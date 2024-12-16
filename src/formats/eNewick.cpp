@@ -98,6 +98,11 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             }
         } else if (c == ';') {
             tokens.push_back({TokenType::SEMI_COLON, ";"});
+
+            // For now, we break once we hit a ;
+            // Will maybe add support if the extended newick file
+            // has multiple lines in it.
+            break;
         }
     }
 
