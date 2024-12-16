@@ -94,7 +94,8 @@ static uint64_t rf_dist(
     const std::vector<std::unordered_set<std::string>> &splits1,
     const std::vector<std::unordered_set<std::string>> &splits2
 ) {
-    // TODO: Figure out a better way to do this, maybe bit manip?
+    // TODO: Figure out a better way to do this.
+    // Maybe some bitwise stuff, or that hash40 thing.
     auto concatSplit = [](const std::unordered_set<std::string> &split) {
         std::string res;
 
