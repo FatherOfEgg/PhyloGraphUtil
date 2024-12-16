@@ -282,7 +282,7 @@ void saveENWK(const Graph &g, const std::string &filename) {
 
     if (!f) {
         std::cerr << "Failed to save to '" << filename << "'."<< std::endl;
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     std::unordered_set<uint64_t> hybridFirstOccurrence;

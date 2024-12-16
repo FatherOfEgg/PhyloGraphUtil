@@ -1,5 +1,6 @@
 #include "compare.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 
@@ -22,7 +23,7 @@ static void compareUsage() {
 void compare(int argc, char **argv) {
     if (argc == 0) {
         compareUsage();
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     Graph g1 = {.format = FormatType::INVALID};
@@ -31,7 +32,7 @@ void compare(int argc, char **argv) {
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argv[i], "-h")) {
             compareUsage();
-            std::exit(0);
+            std::exit(EXIT_SUCCESS);
         } else if (g1.format == FormatType::INVALID) {
             g1.open(argv[i]);
         } else if (g2.format == FormatType::INVALID) {
@@ -42,7 +43,7 @@ void compare(int argc, char **argv) {
     if (g1.format == FormatType::INVALID
     ||  g2.format == FormatType::INVALID) {
         compareUsage();
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     robinsonFoulds(g1, g2);

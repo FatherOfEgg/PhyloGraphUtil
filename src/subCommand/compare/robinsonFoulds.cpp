@@ -130,7 +130,7 @@ static uint64_t rf_dist(
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
     if (g1.leaves.size() != g2.leaves.size()) {
         std::cerr << "Trees do not have the same number of leaves." << std::endl;
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     std::unordered_set<std::string> leaves1;
@@ -145,12 +145,12 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
 
     if (leaves1 != leaves2) {
         std::cerr << "Trees do not have the same leaf names." << std::endl;
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     /* if (g1.reticulations.size() != g2.reticulations.size()) {
         std::cerr << "Trees do not have the same number of reticulations." << std::endl;
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     } */
 
     auto splits1 = getSplits(g1);

@@ -47,7 +47,7 @@ static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
 
     if (it == inDegree.end()) {
         std::cerr << "Couldn't find root." << std::endl;
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     return std::distance(inDegree.begin(), it);
@@ -64,7 +64,7 @@ void Graph::open(const std::string &file) {
 
     std::cerr << "Couldn't open '" << file << "'" << std::endl;
     printFormats();
-    std::exit(1);
+    std::exit(EXIT_FAILURE);
 }
 
 void Graph::save(FormatType f, const std::string &filename) const {

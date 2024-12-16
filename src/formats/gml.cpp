@@ -90,7 +90,7 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             &&  tokens.back().type == TokenType::DIRECTED
             &&  std::stoi(num, nullptr) == 0) {
                 std::cerr << "GML graph is not directed. Please make sure it is directed." << std::endl;
-                std::exit(1);
+                std::exit(EXIT_FAILURE);
             }
 
             tokens.push_back({TokenType::ATTRIBUTE_NUMBER, num});
@@ -218,7 +218,7 @@ void saveGML(const Graph &g, const std::string &filename) {
 
     if (!f) {
         std::cerr << "Failed to save to '" << filename << "'."<< std::endl;
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     std::ostringstream edges;

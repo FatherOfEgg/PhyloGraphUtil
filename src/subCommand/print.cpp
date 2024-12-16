@@ -1,5 +1,6 @@
 #include "print.h"
 
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 
@@ -22,13 +23,13 @@ static void printUsage() {
 void print(int argc, char **argv) {
     if (argc == 0) {
         printUsage();
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argv[i], "-h")) {
             printUsage();
-            std::exit(0);
+            std::exit(EXIT_SUCCESS);
         }
 
         Graph g;

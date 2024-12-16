@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -180,7 +181,7 @@ void saveADMIX(const Graph &g, const std::string &filename) {
 
     if (!f) {
         std::cerr << "Failed to save to '" << filename << "'."<< std::endl;
-        std::exit(1);
+        std::exit(EXIT_FAILURE);
     }
 
     uint64_t edgeCount = 1;
