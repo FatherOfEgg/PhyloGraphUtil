@@ -12,7 +12,7 @@ public:
     void addNode();
     unsigned int getNumNodes() const;
 
-    void addEdge(const uint64_t &source, const uint64_t &target);
+    void addEdge(uint64_t source, uint64_t target);
     unsigned int getNumEdges() const;
 
     void open(const std::string &file);

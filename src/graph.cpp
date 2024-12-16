@@ -16,7 +16,7 @@ unsigned int Graph::getNumNodes() const {
     return adjList.size();
 }
 
-void Graph::addEdge(const uint64_t &source, const uint64_t &target) {
+void Graph::addEdge(uint64_t source, uint64_t target) {
     if (source >= adjList.size()) {
         addNode();
     }
