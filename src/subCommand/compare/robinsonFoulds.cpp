@@ -148,10 +148,10 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
         std::exit(1);
     }
 
-    if (g1.reticulations.size() != g2.reticulations.size()) {
+    /* if (g1.reticulations.size() != g2.reticulations.size()) {
         std::cerr << "Trees do not have the same number of reticulations." << std::endl;
         std::exit(1);
-    }
+    } */
 
     auto splits1 = getSplits(g1);
     auto splits2 = getSplits(g2);
