@@ -319,7 +319,7 @@ void saveENWK(const Graph &g, const std::string &filename) {
                 dfs(g.adjList[node][i - 1]);
 
                 if (i != 1) {
-                    f << ",";
+                    f << ", ";
                 }
             }
 
