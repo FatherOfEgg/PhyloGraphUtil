@@ -1,5 +1,4 @@
 #include "robinsonFoulds.h"
-#include "lap.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -12,22 +11,27 @@
 #include <unordered_set>
 #include <vector>
 
+#include "lap.h"
+#include "util/bitmask.h"
+
+using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
+
 static std::unordered_map<std::string, uint64_t> bitmaskId;
 
-static std::unordered_set<uint64_t> computeClustersHelper(
+static BitmaskSet computeClustersHelper(
     const Graph &g,
     const std::unordered_map<uint64_t, uint8_t> &curEdges
 ) {
-    std::unordered_set<uint64_t> res;
+    BitmaskSet res;
 
-    std::function<uint64_t(uint64_t)> postOrder = [&](uint64_t node) -> uint64_t {
-        uint64_t bitmask = 0;
+    std::function<Bitmask(uint64_t)> postOrder = [&](uint64_t node) -> Bitmask {
+        Bitmask bm;
 
         auto leafIt = g.leafName.find(node);
 
         if (leafIt != g.leafName.end()) {
             uint64_t id = bitmaskId.at(leafIt->second);
-            bitmask = 1 << id;
+            bm.setBit(1 << id);
         } else {
             for (const uint64_t &c : g.adjList[node]) {
                 auto it = g.reticulations.find(c);
@@ -47,12 +51,12 @@ static std::unordered_set<uint64_t> computeClustersHelper(
                     }
                 }
 
-                bitmask |= postOrder(c);
+                bm |= postOrder(c);
             }
         }
 
-        res.insert(bitmask);
-        return bitmask;
+        res.insert(bm);
+        return bm;
     };
 
     postOrder(g.root);
@@ -60,8 +64,8 @@ static std::unordered_set<uint64_t> computeClustersHelper(
     return res;
 }
 
-static std::vector<std::unordered_set<uint64_t>> computeClusters(const Graph &g) {
-    std::vector<std::unordered_set<uint64_t>> clusters;
+static std::vector<BitmaskSet> computeClusters(const Graph &g) {
+    std::vector<BitmaskSet> clusters;
 
     std::unordered_map<uint64_t, uint8_t> curEdges;
     curEdges.reserve(g.reticulations.size());
@@ -94,12 +98,12 @@ static std::vector<std::unordered_set<uint64_t>> computeClusters(const Graph &g)
 }
 
 static uint64_t rfDist(
-    std::unordered_set<uint64_t> clusters1,
-    std::unordered_set<uint64_t> clusters2
+    BitmaskSet clusters1,
+    BitmaskSet clusters2
 ) {
     uint64_t commonClusters = 0;
 
-    for (const uint64_t &c1 : clusters1) {
+    for (const Bitmask &c1 : clusters1) {
         if (clusters2.find(c1) != clusters2.end()) {
             commonClusters++;
         }
@@ -144,8 +148,8 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
         std::exit(EXIT_FAILURE);
     } */
 
-    std::vector<std::unordered_set<uint64_t>> c1 = computeClusters(g1);
-    std::vector<std::unordered_set<uint64_t>> c2 = computeClusters(g2);
+    std::vector<BitmaskSet> c1 = computeClusters(g1);
+    std::vector<BitmaskSet> c2 = computeClusters(g2);
 
     // std::cout << c1.size() << std::endl;
     // std::cout << c2.size() << std::endl;
