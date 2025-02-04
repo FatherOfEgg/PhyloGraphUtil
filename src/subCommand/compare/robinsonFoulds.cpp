@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "lap.h"
+#include "util/lap.h"
 #include "util/bitmask.h"
 
 using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
