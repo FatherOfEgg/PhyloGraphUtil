@@ -10,6 +10,7 @@ public:
     Bitmask();
     Bitmask(const Bitmask &other);
 
+    bool operator==(const Bitmask &other) const;
     Bitmask &operator|=(const Bitmask &other);
 
     void setBit(uint64_t bit);

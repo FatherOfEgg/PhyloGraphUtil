@@ -13,6 +13,16 @@ Bitmask::Bitmask(const Bitmask &other) {
     }
 }
 
+bool Bitmask::operator==(const Bitmask &other) const {
+    for (size_t i = 0; i < BITMASK_SIZE; i++) {
+        if (mBitmask[i] != other.mBitmask[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 Bitmask &Bitmask::operator|=(const Bitmask &other) {
     for (size_t i = 0; i < BITMASK_SIZE; i++) {
         this->mBitmask[i] |= other.mBitmask[i];
