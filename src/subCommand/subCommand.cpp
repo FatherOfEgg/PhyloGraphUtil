@@ -12,7 +12,7 @@ SubCommand subCommands[NUM_SUB_COMMNADS] = {
     },
     {
         "compare",
-        "Compares one graph to another using Robinson Foulds distance.",
+        "Compares one graph to another using a specified method.",
         compare
     },
     {
