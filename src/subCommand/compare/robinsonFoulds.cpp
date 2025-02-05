@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
-#include <functional>
 #include <iostream>
 #include <limits>
 #include <string>
@@ -11,91 +10,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "util/lap.h"
 #include "util/bitmask.h"
+#include "util/cluster.h"
+#include "util/lap.h"
 
 using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
-
-static std::unordered_map<std::string, uint64_t> bitmaskId;
-
-static BitmaskSet computeClustersHelper(
-    const Graph &g,
-    const std::unordered_map<uint64_t, uint8_t> &curEdges
-) {
-    BitmaskSet res;
-
-    std::function<Bitmask(uint64_t)> postOrder = [&](uint64_t node) -> Bitmask {
-        Bitmask bm;
-
-        auto leafIt = g.leafName.find(node);
-
-        if (leafIt != g.leafName.end()) {
-            uint64_t id = bitmaskId.at(leafIt->second);
-            bm.setBit(1 << id);
-        } else {
-            for (const uint64_t &c : g.adjList[node]) {
-                auto it = g.reticulations.find(c);
-
-                // Check if the current node has an edge
-                // to a reticulation at child c
-                if (it != g.reticulations.end()) {
-                    // Child c is a reticulation, so get its parents
-                    const std::vector<uint64_t> &parents = it->second;
-                    uint8_t curEdge = curEdges.at(c);
-
-                    // curEdge indexes into parents
-                    // Continue if there is "no" edge from node to reticulation
-                    //
-                    if (parents[curEdge] != node) {
-                        continue;
-                    }
-                }
-
-                bm |= postOrder(c);
-            }
-        }
-
-        res.insert(bm);
-        return bm;
-    };
-
-    postOrder(g.root);
-
-    return res;
-}
-
-static std::vector<BitmaskSet> computeClusters(const Graph &g) {
-    std::vector<BitmaskSet> clusters;
-
-    std::unordered_map<uint64_t, uint8_t> curEdges;
-    curEdges.reserve(g.reticulations.size());
-
-    for (const auto &p : g.reticulations) {
-        curEdges[p.first] = 0;
-    }
-
-    while (true) {
-        clusters.push_back(computeClustersHelper(g, curEdges));
-
-        auto it = curEdges.begin();
-        while (it != curEdges.end()) {
-            if (it->second < g.reticulations.at(it->first).size() - 1) {
-                it->second++;
-                break;
-            } else {
-                it->second = 0;
-            }
-
-            it++;
-        }
-
-        if (it == curEdges.end()) {
-            break;
-        }
-    }
-
-    return clusters;
-}
 
 static uint64_t rfDist(
     BitmaskSet clusters1,
@@ -137,6 +56,8 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     }
 
     // Setup bitmask ids
+    std::unordered_map<std::string, uint64_t> bitmaskId;
+
     leaves1.insert(leaves2.begin(), leaves2.end());
 
     for (const std::string &l : leaves1) {
@@ -148,8 +69,8 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
         std::exit(EXIT_FAILURE);
     } */
 
-    std::vector<BitmaskSet> c1 = computeClusters(g1);
-    std::vector<BitmaskSet> c2 = computeClusters(g2);
+    std::vector<BitmaskSet> c1 = computeClusters(g1, bitmaskId);
+    std::vector<BitmaskSet> c2 = computeClusters(g2, bitmaskId);
 
     // std::cout << c1.size() << std::endl;
     // std::cout << c2.size() << std::endl;
