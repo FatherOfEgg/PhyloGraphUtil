@@ -3,7 +3,9 @@
 A tool to compare and convert between different network formats.
 ## Features
 
-- Compare between 2 networks using Robinson Foulds
+- Compare between 2 networks using
+  - Robinson Foulds
+  - Jaccard index
 - Convert one format into another
   - **Note:** Most information about the network for certain things/attributes will be lost, such as internal node names, length, weights, etc.
   - While the graph may be the same in terms of structure, the output may look different, as in, `GML -> Extended Newick -> GML` may or may not produce something that looks different.
@@ -35,7 +37,7 @@ FLAGS:
 
 SUBCOMMANDS:
         convert Converts from one graph format to another.
-        compare Compares one graph to another using Robinson Foulds distance.
+        compare Compares one graph to another using a specified method.
         print   Prints basic info of the read-in graph(s).
 
 FORMATS:
@@ -47,9 +49,9 @@ Converting GML to Extended Newick:
 PhyloGraphUtil convert test.gml ENWK
 ```
 
-Comparing 2 different networks:
+Comparing 2 different networks using Robinson Foulds:
 ```
-PhyloGraphUtil compare A.gml B.enwk
+PhyloGraphUtil compare rf A.gml B.enwk
 ```
 
 ## Build
