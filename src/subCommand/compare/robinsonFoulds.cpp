@@ -1,5 +1,4 @@
 #include "robinsonFoulds.h"
-#include "lap.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -10,65 +9,73 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
 #include <vector>
 
-static std::vector<std::unordered_set<std::string>> getSplitsHelper(
+#include "util/lap.h"
+#include "util/bitmask.h"
+
+using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
+
+static std::unordered_map<std::string, uint64_t> bitmaskId;
+
+static BitmaskSet computeClustersHelper(
     const Graph &g,
     const std::unordered_map<uint64_t, uint8_t> &curEdges
 ) {
-    std::vector<std::unordered_set<std::string>> splits;
-    std::vector<std::unordered_set<std::string>> subtreeLeaves(g.adjList.size());
+    BitmaskSet res;
 
-    std::function<std::unordered_set<std::string>(uint64_t)> dfs = [&](uint64_t node) -> std::unordered_set<std::string> {
-        if (g.leafName.find(node) != g.leafName.end()) {
-            // Leaf is more or less a subtree of itself
-            subtreeLeaves[node].insert(g.leafName.at(node));
-            return subtreeLeaves[node];
-        }
+    std::function<Bitmask(uint64_t)> postOrder = [&](uint64_t node) -> Bitmask {
+        Bitmask bm;
 
-        for (const uint64_t &c : g.adjList[node]) {
-            // Get this node's children's subtree and the leaves that they each can reach
+        auto leafIt = g.leafName.find(node);
 
-            // Check if node has an edge to a reticulation
-            auto it = g.reticulations.find(c);
-            if (it != g.reticulations.end()) {
-                const std::vector<uint64_t> &parents = it->second;
-                uint8_t curEdge = curEdges.at(c);
+        if (leafIt != g.leafName.end()) {
+            uint64_t id = bitmaskId.at(leafIt->second);
+            bm.setBit(1 << id);
+        } else {
+            for (const uint64_t &c : g.adjList[node]) {
+                auto it = g.reticulations.find(c);
 
-                // Continue if there is "no" edge from node to reticulation
-                if (parents[curEdge] != node) {
-                    continue;
+                // Check if the current node has an edge
+                // to a reticulation at child c
+                if (it != g.reticulations.end()) {
+                    // Child c is a reticulation, so get its parents
+                    const std::vector<uint64_t> &parents = it->second;
+                    uint8_t curEdge = curEdges.at(c);
+
+                    // curEdge indexes into parents
+                    // Continue if there is "no" edge from node to reticulation
+                    //
+                    if (parents[curEdge] != node) {
+                        continue;
+                    }
                 }
+
+                bm |= postOrder(c);
             }
-
-            std::unordered_set<std::string> children = dfs(c);
-            subtreeLeaves[node].insert(children.begin(), children.end());
         }
 
-        if (node != g.root) {
-            splits.push_back(subtreeLeaves[node]);
-        }
-
-        // Return the leaves that this node can reach
-        return subtreeLeaves[node];
+        res.insert(bm);
+        return bm;
     };
 
-    dfs(g.root);
-    return splits;
+    postOrder(g.root);
+
+    return res;
 }
 
-static std::vector<std::vector<std::unordered_set<std::string>>> getSplits(const Graph &g) {
-    std::vector<std::vector<std::unordered_set<std::string>>> res;
+static std::vector<BitmaskSet> computeClusters(const Graph &g) {
+    std::vector<BitmaskSet> clusters;
 
     std::unordered_map<uint64_t, uint8_t> curEdges;
+    curEdges.reserve(g.reticulations.size());
 
     for (const auto &p : g.reticulations) {
         curEdges[p.first] = 0;
     }
 
     while (true) {
-        res.push_back(getSplitsHelper(g, curEdges));
+        clusters.push_back(computeClustersHelper(g, curEdges));
 
         auto it = curEdges.begin();
         while (it != curEdges.end()) {
@@ -87,44 +94,25 @@ static std::vector<std::vector<std::unordered_set<std::string>>> getSplits(const
         }
     }
 
-    return res;
+    return clusters;
 }
 
-static uint64_t rf_dist(
-    const std::vector<std::unordered_set<std::string>> &splits1,
-    const std::vector<std::unordered_set<std::string>> &splits2
+static uint64_t rfDist(
+    BitmaskSet clusters1,
+    BitmaskSet clusters2
 ) {
-    // TODO: Figure out a better way to do this.
-    // Maybe some bitwise stuff, or that hash40 thing.
-    auto concatSplit = [](const std::unordered_set<std::string> &split) {
-        std::string res;
+    uint64_t commonClusters = 0;
 
-        for (const auto &leaf : split) {
-            res += leaf + ",";
-        }
-
-        return res;
-    };
-
-    std::unordered_set<std::string> s1;
-    for (const auto &s : splits1) {
-        s1.insert(concatSplit(s));
-    }
-
-    std::unordered_set<std::string> s2;
-    for (const auto &s : splits2) {
-        s2.insert(concatSplit(s));
-    }
-
-    uint64_t commonSplits = 0;
-    for (const auto& split : s1) {
-        if (s2.find(split) != s2.end()) {
-            commonSplits++;
+    for (const Bitmask &c1 : clusters1) {
+        if (clusters2.find(c1) != clusters2.end()) {
+            commonClusters++;
         }
     }
 
-    uint64_t rf_distance = s1.size() + s2.size() - 2 * commonSplits;
-    return rf_distance;
+    // std::cout << "similarity: " << commonClusters << std::endl;
+    // std::cout << "diff: " << clusters1.size() + clusters2.size() - 2 * commonClusters << std::endl;
+
+    return clusters1.size() + clusters2.size() - 2 * commonClusters;
 }
 
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
@@ -148,16 +136,26 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
         std::exit(EXIT_FAILURE);
     }
 
+    // Setup bitmask ids
+    leaves1.insert(leaves2.begin(), leaves2.end());
+
+    for (const std::string &l : leaves1) {
+        bitmaskId[l] = bitmaskId.size();
+    }
+
     /* if (g1.reticulations.size() != g2.reticulations.size()) {
         std::cerr << "Trees do not have the same number of reticulations." << std::endl;
         std::exit(EXIT_FAILURE);
     } */
 
-    auto splits1 = getSplits(g1);
-    auto splits2 = getSplits(g2);
+    std::vector<BitmaskSet> c1 = computeClusters(g1);
+    std::vector<BitmaskSet> c2 = computeClusters(g2);
 
-    size_t n = splits1.size();
-    size_t m = splits2.size();
+    // std::cout << c1.size() << std::endl;
+    // std::cout << c2.size() << std::endl;
+
+    size_t n = c1.size();
+    size_t m = c2.size();
     size_t size = std::max(n, m);
 
     std::vector<std::vector<double>> costMatrix(size, std::vector<double>(size, 0.0));
@@ -165,7 +163,7 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     uint64_t minDist = std::numeric_limits<uint64_t>::max();
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < m; j++) {
-            uint64_t dist = rf_dist(splits1[i], splits2[j]);
+            uint64_t dist = rfDist(c1[i], c2[j]);
             
             // If we find a perfect match
             if (dist == 0) {
@@ -199,7 +197,7 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
 
     for (size_t i = 0; i < n; i++) {
         // Check if it's a valid assignment
-        if (rowsol[i] < m) {
+        if (rowsol[i] < static_cast<int>(m)) {
             uint64_t dist = static_cast<uint64_t>(costMatrix[i][rowsol[i]]);
             minDist = std::min(minDist, dist);
         }
