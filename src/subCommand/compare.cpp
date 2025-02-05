@@ -12,7 +12,7 @@ static void compareUsage() {
     std::cout << "Compares one graph to another using Robinson Foulds distance." << std::endl;
     std::cout << std::endl;
     std::cout << "USAGE:" << std::endl;
-    std::cout << "\tPhyloGraphUtil convert <INPUT1> <INPUT2>" << std::endl;
+    std::cout << "\tPhyloGraphUtil compare <INPUT1> <INPUT2>" << std::endl;
     std::cout << std::endl;
     std::cout << "FLAGS:" << std::endl;
     std::cout << "\t-h\tPrints help information." << std::endl;
