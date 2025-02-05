@@ -45,8 +45,8 @@ cost lap(
 ) {
     bool unassignedfound;
     row i, imin, numfree = 0, prvnumfree, f, i0, k, freerow, *pred, *freeunassigned;
-    col j, j1, j2, endofpath, last, low, up, *collist, *matches;
-    cost min, h, umin, usubmin, v2, *d;
+    col j, j1, j2 = 0, endofpath, last = 0, low, up, *collist, *matches;
+    cost min = 0, h, umin, usubmin, v2, *d;
 
     freeunassigned = new row[dim];     // list of unassigned rows.
     collist = new col[dim];  // list of columns to be scanned in various ways.
