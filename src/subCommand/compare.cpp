@@ -6,6 +6,7 @@
 
 #include "../formats/format.h"
 #include "compare/jaccardIndex.h"
+#include "compare/precisionAndRecall.h"
 #include "compare/robinsonFoulds.h"
 
 static void compareUsage() {
@@ -21,6 +22,7 @@ static void compareUsage() {
     std::cout << "METHOD:" << std::endl;
     std::cout << "\trf\tRobinson Foulds." << std::endl;
     std::cout << "\tji\tJaccard index." << std::endl;
+    std::cout << "\tpr\tPrecision & Recall." << std::endl;
     std::cout << std::endl;
     printFormats();
 }
@@ -52,6 +54,8 @@ void compare(int argc, char **argv) {
         robinsonFoulds(g1, g2);
     } else if (!strcmp(argv[0], "ji")) {
         jaccardIndex(g1, g2);
+    } else if (!strcmp(argv[0], "pr")) {
+        precisionAndRecall(g1, g2);
     } else {
         std::cout << "'" << argv[0] << "' is not a valid method." << std::endl;
         compareUsage();
