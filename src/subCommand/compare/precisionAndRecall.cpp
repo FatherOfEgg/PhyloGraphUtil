@@ -1,7 +1,9 @@
 #include "precisionAndRecall.h"
 
 #include <iostream>
+#include <unordered_set>
 
+#include "util/bitmask.h"
 #include "util/cluster.h"
 
 // Graph g1 is the original
@@ -42,35 +44,35 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
     // TODO: Find a different way so that we don't have to
     // merge them later and instead just insert into a set.
     // Probably modify computeClusters
-    BitmaskSet original; // original 
-    BitmaskSet compare; // compare
+    std::unordered_multiset<Bitmask> originalDup;
+    std::unordered_multiset<Bitmask> compareDup;
 
     for (const BitmaskSet &bs : c1) {
-        original.insert(bs.begin(), bs.end());
+        originalDup.insert(bs.begin(), bs.end());
     }
 
     for (const BitmaskSet &bs : c2) {
-        compare.insert(bs.begin(), bs.end());
+        compareDup.insert(bs.begin(), bs.end());
     }
 
     uint64_t intersection = 0;
 
-    for (const Bitmask &bs : original) {
-        if (compare.find(bs) != compare.end()) {
+    for (const Bitmask &bs : originalDup) {
+        if (compareDup.find(bs) != compareDup.end()) {
             intersection++;
         }
     }
 
     double precision = 0.0;
 
-    if (compare.size() > 0.0) {
-        precision = static_cast<double>(intersection) / compare.size();
+    if (compareDup.size() > 0.0) {
+        precision = static_cast<double>(intersection) / compareDup.size();
     }
 
     double recall = 0.0;
 
-    if (original.size() > 0.0) {
-        recall = static_cast<double>(intersection) / original.size();
+    if (originalDup.size() > 0.0) {
+        recall = static_cast<double>(intersection) / originalDup.size();
     }
 
 
