@@ -67,7 +67,7 @@ void convert(int argc, char **argv) {
         } else if (formatOut == FormatType::INVALID) {
             for (const Format &f : formats) {
                 if (f.name == argv[i]) {
-                    formatOut = f.format;
+                    formatOut = f.type;
                     break;
                 }
             }

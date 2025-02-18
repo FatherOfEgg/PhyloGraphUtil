@@ -6,7 +6,7 @@
 #include "../graph.h"
 
 struct Format {
-    FormatType format;
+    FormatType type;
     std::string name;
     bool (*open)(Graph &, const std::string &);
     void (*save)(const Graph &, const std::string &);
