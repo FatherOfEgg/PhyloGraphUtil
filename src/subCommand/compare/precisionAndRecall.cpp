@@ -6,6 +6,34 @@
 #include "util/bitmask.h"
 #include "util/cluster.h"
 
+using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
+using BitmaskMultiset = std::unordered_multiset<Bitmask, BitmaskHash>;
+
+template <typename T1, typename T2>
+static double f1Score(const T1 &original, const T2 &compare) {
+    uint64_t intersection = 0;
+
+    for (const auto &e : original) {
+        if (compare.find(e) != compare.end()) {
+            intersection++;
+        }
+    }
+
+    double precision = 0.0;
+
+    if (compare.size() > 0.0) {
+        precision = static_cast<double>(intersection) / compare.size();
+    }
+
+    double recall = 0.0;
+
+    if (original.size() > 0.0) {
+        recall = static_cast<double>(intersection) / original.size();
+    }
+
+    return 2.0 * (precision * recall) / (precision + recall);
+}
+
 // Graph g1 is the original
 void precisionAndRecall(const Graph &g1, const Graph &g2) {
     if (g1.leaves.size() != g2.leaves.size()) {
@@ -44,8 +72,8 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
     // TODO: Find a different way so that we don't have to
     // merge them later and instead just insert into a set.
     // Probably modify computeClusters
-    std::unordered_multiset<Bitmask> originalDup;
-    std::unordered_multiset<Bitmask> compareDup;
+    BitmaskMultiset originalDup;
+    BitmaskMultiset compareDup;
 
     for (const BitmaskSet &bs : c1) {
         originalDup.insert(bs.begin(), bs.end());
@@ -55,26 +83,9 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
         compareDup.insert(bs.begin(), bs.end());
     }
 
-    uint64_t intersection = 0;
+    BitmaskSet originalUniq(originalDup.begin(), originalDup.end());
+    BitmaskSet compareUniq(compareDup.begin(), compareDup.end());
 
-    for (const Bitmask &bs : originalDup) {
-        if (compareDup.find(bs) != compareDup.end()) {
-            intersection++;
-        }
-    }
-
-    double precision = 0.0;
-
-    if (compareDup.size() > 0.0) {
-        precision = static_cast<double>(intersection) / compareDup.size();
-    }
-
-    double recall = 0.0;
-
-    if (originalDup.size() > 0.0) {
-        recall = static_cast<double>(intersection) / originalDup.size();
-    }
-
-
-    std::cout << "F1 score: " << 2.0 * (precision * recall) / (precision + recall) << std::endl;
+    std::cout << "F1 score(duplicates): " << f1Score(originalDup, compareDup) << std::endl;
+    std::cout << "F1 score(unique): " << f1Score(originalUniq, compareUniq) << std::endl;
 }
