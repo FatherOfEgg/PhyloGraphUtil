@@ -1,28 +1,11 @@
 #include "convert.h"
 
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <string>
 
 #include "../formats/format.h"
-
-static std::string filenameNoExt(const std::string &file) {
-    size_t dotPos = file.find_last_of(".");
-
-    if (dotPos == std::string::npos) {
-        return file;
-    }
-
-    size_t lastSlash = file.find_last_of("/\\");
-
-    if (dotPos > lastSlash) {
-        return file.substr(0, dotPos);
-    } else {
-        return file;
-    }
-}
 
 static void convertUsage() {
     std::cout << "PhyloGraphUtil convert" << std::endl;
@@ -89,17 +72,7 @@ void convert(int argc, char **argv) {
     }
 
     if (filename.empty()) {
-        std::string ext = formats[static_cast<size_t>(formatOut)].name;
-        std::transform(
-            ext.begin(),
-            ext.end(),
-            ext.begin(),
-            [](char c) {
-                return std::tolower(c);
-            }
-        );
-
-        filename = filenameNoExt(input) + "." + ext;
+        filename = input;
     }
 
     g.save(formatOut, filename);
