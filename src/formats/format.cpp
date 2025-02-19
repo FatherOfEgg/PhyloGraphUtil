@@ -11,18 +11,21 @@ Format formats[static_cast<size_t>(FormatType::NUM)] = {
     {
         FormatType::GML,
         "GML",
+        {".gml"},
         openGML,
         saveGML
     },
     {
         FormatType::ENWK,
         "ENWK",
+        {".enwk", ".ewk"},
         openENWK,
         saveENWK
     },
     {
         FormatType::ADMIX,
         "ADMIX",
+        {".admix"},
         openADMIX,
         saveADMIX
     }
