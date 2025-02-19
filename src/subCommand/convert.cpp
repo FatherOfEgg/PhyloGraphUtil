@@ -1,5 +1,7 @@
 #include "convert.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -48,8 +50,19 @@ void convert(int argc, char **argv) {
             g.open(argv[i]);
             input = argv[i];
         } else if (formatOut == FormatType::INVALID) {
+            std::string formatIn = argv[i];
+
+            std::transform(
+                formatIn.begin(),
+                formatIn.end(),
+                formatIn.begin(),
+                [](char c) {
+                    return std::toupper(c);
+                }
+            );
+
             for (const Format &f : formats) {
-                if (f.name == argv[i]) {
+                if (f.name == formatIn) {
                     formatOut = f.type;
                     break;
                 }
