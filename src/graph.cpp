@@ -53,6 +53,22 @@ static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
     return std::distance(inDegree.begin(), it);
 }
 
+static std::string filenameNoExt(const std::string &file) {
+    size_t dotPos = file.find_last_of(".");
+
+    if (dotPos == std::string::npos) {
+        return file;
+    }
+
+    size_t lastSlash = file.find_last_of("/\\");
+
+    if (dotPos > lastSlash) {
+        return file.substr(0, dotPos);
+    } else {
+        return file;
+    }
+}
+
 static std::string getExtension(const std::string &filename) {
     size_t pos = filename.find_last_of('.');
     
@@ -64,6 +80,26 @@ static std::string getExtension(const std::string &filename) {
 }
 
 void Graph::open(const std::string &file) {
+    std::string ext = getExtension(file);
+
+    // Go through each format and their expected extension name(s).
+    for (const Format &f : formats) {
+        for (const std::string &e : f.exts) {
+            if (ext == e) {
+                if (!f.open(*this, file)) {
+                    std::cerr << "Failed to open `" << file << "`" << std::endl;
+                    std::exit(EXIT_FAILURE);
+                }
+
+                format = f.type;
+                root = getRoot(adjList);
+                return;
+            }
+        }
+    }
+
+    // If the file didn't have a valid file extension
+    // Try to open it by bruteforcing it with every format
     for (const auto &f : formats) {
         if (f.open(*this, file)) {
             format = f.type;
