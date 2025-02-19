@@ -53,6 +53,16 @@ static uint64_t getRoot(const std::vector<std::vector<uint64_t>> &adjList) {
     return std::distance(inDegree.begin(), it);
 }
 
+static std::string getExtension(const std::string &filename) {
+    size_t pos = filename.find_last_of('.');
+    
+    if (pos == std::string::npos) {
+        return "";
+    }
+    
+    return filename.substr(pos);
+}
+
 void Graph::open(const std::string &file) {
     for (const auto &f : formats) {
         if (f.open(*this, file)) {
@@ -68,7 +78,9 @@ void Graph::open(const std::string &file) {
 }
 
 void Graph::save(FormatType f, const std::string &filename) const {
-    formats[static_cast<size_t>(f)].save(*this, filename);
+    std::string out = filenameNoExt(filename);
+    out += formats[static_cast<size_t>(f)].exts[0];
+    formats[static_cast<size_t>(f)].save(*this, out);
 }
 
 void Graph::print() const {
