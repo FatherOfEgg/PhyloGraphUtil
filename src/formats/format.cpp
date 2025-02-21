@@ -6,6 +6,7 @@
 #include "gml.h"
 #include "eNewick.h"
 #include "admixture.h"
+#include "treemix.h"
 
 Format formats[static_cast<size_t>(FormatType::NUM)] = {
     {
@@ -28,6 +29,13 @@ Format formats[static_cast<size_t>(FormatType::NUM)] = {
         {".admix"},
         openADMIX,
         saveADMIX
+    },
+{
+        FormatType::TREEMIX,
+        "TREEMIX",
+        {".treemix"},
+        openTreemix,
+        saveTreemix
     }
 };
 
