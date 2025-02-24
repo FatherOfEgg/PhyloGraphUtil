@@ -232,7 +232,15 @@ void saveGML(const Graph &g, const std::string &filename) {
         f << indent << "node [" << std::endl;
         indent += "    ";
 
-        f << indent << "id " << i << std::endl;
+        f << indent << "id ";
+        auto nodeIt = g.leafName.find(i);
+
+        if (nodeIt != g.leafName.end()) {
+            f << nodeIt->second;
+        } else {
+            f << i;
+        }
+        f << std::endl;
 
         indent = indent.substr(0, indent.length() - 4);
         f << indent << "]" << std::endl;
@@ -242,7 +250,16 @@ void saveGML(const Graph &g, const std::string &filename) {
             indent += "    ";
 
             edges << indent << "source " << i << std::endl;
-            edges << indent << "target " << t<< std::endl;
+
+            edges << indent << "target ";
+            auto targetIt = g.leafName.find(t);
+
+            if (targetIt != g.leafName.end()) {
+                edges << targetIt->second;
+            } else {
+                edges << t;
+            }
+            edges << std::endl;
 
             indent = indent.substr(0, indent.length() - 4);
             edges << indent << "]" << std::endl;
