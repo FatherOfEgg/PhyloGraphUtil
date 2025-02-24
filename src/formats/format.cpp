@@ -6,25 +6,36 @@
 #include "gml.h"
 #include "eNewick.h"
 #include "admixture.h"
+#include "treemix.h"
 
 Format formats[static_cast<size_t>(FormatType::NUM)] = {
     {
         FormatType::GML,
         "GML",
+        {".gml"},
         openGML,
         saveGML
     },
     {
         FormatType::ENWK,
         "ENWK",
+        {".enwk", ".ewk"},
         openENWK,
         saveENWK
     },
     {
         FormatType::ADMIX,
         "ADMIX",
+        {".admix"},
         openADMIX,
         saveADMIX
+    },
+{
+        FormatType::TREEMIX,
+        "TREEMIX",
+        {".treemix"},
+        openTreemix,
+        saveTreemix
     }
 };
 

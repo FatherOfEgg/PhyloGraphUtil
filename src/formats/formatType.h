@@ -5,5 +5,6 @@ enum class FormatType {
     GML,
     ENWK,
     ADMIX,
+    TREEMIX,
     NUM
 };
