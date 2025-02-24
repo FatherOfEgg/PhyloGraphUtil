@@ -1,12 +1,12 @@
 #include "treemix.h"
 
 #include "eNewick.h"
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -17,6 +17,9 @@ enum class TokenType {
 };
 
 struct Token {
+    Token(TokenType t, std::vector<std::string> v)
+    : type(t), value(std::move(v)) {}
+
     TokenType type;
     std::vector<std::string> value;
 };
@@ -67,15 +70,15 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             words.push_back(word);
         }
 
-        tokens.emplace_back(Token{
-        TokenType::ORIGIN,
-        extractSubtree(words[static_cast<size_t>(TokenType::ORIGIN)])
-        });
+        tokens.emplace_back(
+            TokenType::ORIGIN,
+            extractSubtree(words[static_cast<size_t>(TokenType::ORIGIN)])
+        );
 
-        tokens.emplace_back(Token{
-        TokenType::DESTINATION,
-        extractSubtree(words[static_cast<size_t>(TokenType::DESTINATION)])
-        });
+        tokens.emplace_back(
+            TokenType::DESTINATION,
+            extractSubtree(words[static_cast<size_t>(TokenType::DESTINATION)])
+        );
     }
 
     return tokens;
