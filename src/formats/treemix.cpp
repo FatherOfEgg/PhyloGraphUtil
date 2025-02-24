@@ -9,6 +9,8 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 enum class TokenType {
@@ -17,15 +19,14 @@ enum class TokenType {
 };
 
 struct Token {
-    Token(TokenType t, std::vector<std::string> v)
-    : type(t), value(std::move(v)) {}
+    Token(TokenType t, uint64_t v)
+    : type(t), value(v) {}
 
     TokenType type;
-    std::vector<std::string> value;
+    uint64_t value;
 };
 
-static std::vector<std::string> extractSubtree(const std::string &word) {
-    std::vector<std::string> res;
+static std::vector<uint64_t> getSubtreeId(const Graph &g, const std::string &word) {
     std::vector<std::string> leaves;
 
     size_t start = 0;
@@ -38,6 +39,9 @@ static std::vector<std::string> extractSubtree(const std::string &word) {
 
     leaves.push_back(word.substr(start));
 
+    std::vector<uint64_t> res;
+    res.reserve(leaves.size());
+
     for (const std::string &l : leaves) {
         start = 0;
         size_t colon = l.find(':');
@@ -47,14 +51,56 @@ static std::vector<std::string> extractSubtree(const std::string &word) {
                 start = 1;
             }
 
-            res.push_back(l.substr(start, colon - start));
+            std::string leafName = l.substr(start, colon - start);
+            for (const auto &p : g.leafName) {
+                if (leafName == p.second) {
+                    res.push_back(p.first);
+                    break;
+                }
+            }
         }
     }
 
     return res;
 }
 
-static std::vector<Token> tokenize(std::ifstream &f) {
+static uint64_t extractSubtree(const Graph &g, const std::string &word) {
+    std::vector<uint64_t> subtreeId = getSubtreeId(g, word);
+
+    // Leaf
+    if (subtreeId.size() == 1) {
+        return subtreeId[0];
+    }
+
+    // Subtree of leaves: (a, b)
+    for (uint64_t i = 0; i < g.adjList.size(); i++) {
+        std::unordered_set<uint64_t> children(g.adjList[i].begin(), g.adjList[i].end());
+
+        bool found = true;
+
+        for (const uint64_t &id : subtreeId) {
+            if (children.find(id) == children.end()) {
+                found = false;
+                break;
+            }
+        }
+
+        if (found) {
+            return i;
+        }
+    }
+
+    std::cerr << "Couldn't find subtree for: (";
+    std::cerr << g.leafName.at(subtreeId[0]);
+    for (size_t i = 1; i < subtreeId.size(); i++) {
+        std::cerr << ", " << g.leafName.at(subtreeId[i]);
+    }
+    std::cerr << ")" << std::endl;
+
+    std::exit(EXIT_FAILURE);
+}
+
+static std::vector<Token> tokenize(std::ifstream &f, const Graph &g) {
     std::vector<Token> tokens;
 
     std::string line;
@@ -72,53 +118,16 @@ static std::vector<Token> tokenize(std::ifstream &f) {
 
         tokens.emplace_back(
             TokenType::ORIGIN,
-            extractSubtree(words[static_cast<size_t>(TokenType::ORIGIN)])
+            extractSubtree(g, words[static_cast<size_t>(TokenType::ORIGIN)])
         );
 
         tokens.emplace_back(
             TokenType::DESTINATION,
-            extractSubtree(words[static_cast<size_t>(TokenType::DESTINATION)])
+            extractSubtree(g, words[static_cast<size_t>(TokenType::DESTINATION)])
         );
     }
 
     return tokens;
-}
-
-uint64_t findSubtree(const Graph &g, const std::vector<std::string> &children) {
-    std::vector<uint64_t> id;
-    id.reserve(children.size());
-
-    for (const std::string &c : children) {
-        for (const auto &p : g.leafName) {
-            if (c == p.second) {
-                id.push_back(p.first);
-            }
-        }
-    }
-
-    uint64_t i;
-
-    for (i = 0; i < g.adjList.size(); i++) {
-        auto it = std::search(
-            g.adjList[i].begin(),
-            g.adjList[i].end(),
-            id.begin(),
-            id.end()
-        );
-
-        if (it != g.adjList[i].end()) {
-            return i;
-        }
-    }
-
-    std::cerr << "Couldn't find subtree for: (";
-    std::cerr << children[0];
-    for (i = 1; i < children.size(); i++) {
-        std::cerr << ", " << children[i];
-    }
-    std::cerr << ")" << std::endl;
-
-    return UINT64_MAX;
 }
 
 static bool parse(Graph &g, const std::vector<Token> &tokens) {
@@ -129,12 +138,13 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     uint64_t origin = 0;
 
     for (const Token &t : tokens) {
-        uint64_t subtree = findSubtree(g, t.value);
+        uint64_t subtree = t.value;
 
         uint64_t newNode = g.adjList.size();
         g.addNode();
 
-        for (auto &children : g.adjList) {
+        for (size_t i = 0; i < g.adjList.size(); i++) {
+            std::vector<uint64_t> &children = g.adjList[i];
             auto it = std::find(children.begin(), children.end(), subtree);
 
             if (it != children.end()) {
@@ -146,6 +156,9 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                     *it = newNode;
                     g.addEdge(newNode, subtree);
                     g.addEdge(origin, newNode);
+
+                    g.reticulations[newNode].push_back(origin);
+                    g.reticulations[newNode].push_back(i);
                 }
 
                 break;
@@ -167,7 +180,7 @@ bool openTreemix(Graph &g, const std::string &file) {
         return false;
     }
 
-    std::vector<Token> tokens = tokenize(f);
+    std::vector<Token> tokens = tokenize(f, g);
     f.close();
 
     return parse(g, tokens);
