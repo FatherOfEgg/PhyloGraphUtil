@@ -41,15 +41,17 @@ Format formats[static_cast<size_t>(FormatType::NUM)] = {
 
 void printFormats() {
     std::cout << "FORMATS:" << std::endl;
-    std::cout << "\t";
 
-    for (size_t i = 0; i < NUM_FORMATS; i++) {
-        std::cout << formats[i].name;
+    for (const Format &f : formats) {
+        std::cout << "\t" << f.name << "\t";
 
-        if (i < NUM_FORMATS - 1) {
-            std::cout << ", ";
+        std::cout << f.exts[0];
+        for (size_t i = 1; i < f.exts.size(); i++) {
+            if (!f.exts[i].empty()) {
+                std::cout << ", " << f.exts[i];
+            }
         }
-    }
 
-    std::cout << "." << std::endl;
+        std::cout << std::endl;
+    }
 }
