@@ -84,8 +84,41 @@ static std::vector<Token> tokenize(std::ifstream &f) {
     return tokens;
 }
 
-uint64_t findSubtree() {
+uint64_t findSubtree(const Graph &g, const std::vector<std::string> &children) {
+    std::vector<uint64_t> id;
+    id.reserve(children.size());
 
+    for (const std::string &c : children) {
+        for (const auto &p : g.leafName) {
+            if (c == p.second) {
+                id.push_back(p.first);
+            }
+        }
+    }
+
+    uint64_t i;
+
+    for (i = 0; i < g.adjList.size(); i++) {
+        auto it = std::search(
+            g.adjList[i].begin(),
+            g.adjList[i].end(),
+            id.begin(),
+            id.end()
+        );
+
+        if (it != g.adjList[i].end()) {
+            return i;
+        }
+    }
+
+    std::cerr << "Couldn't find subtree for: (";
+    std::cerr << children[0];
+    for (i = 1; i < children.size(); i++) {
+        std::cerr << ", " << children[i];
+    }
+    std::cerr << ")" << std::endl;
+
+    return UINT64_MAX;
 }
 
 static bool parse(Graph &g, const std::vector<Token> &tokens) {
@@ -93,10 +126,10 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
         return false;
     }
 
-    uint64_t origin;
+    uint64_t origin = 0;
 
     for (const Token &t : tokens) {
-        uint64_t subtree = findSubtree();
+        uint64_t subtree = findSubtree(g, t.value);
 
         uint64_t newNode = g.adjList.size();
         g.addNode();
