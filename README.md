@@ -42,7 +42,10 @@ SUBCOMMANDS:
         print   Prints basic info of the read-in graph(s).
 
 FORMATS:
-        GML, ENWK, ADMIX, TREEMIX.
+        GML     .gml
+        ENWK    .enwk, .ewk
+        ADMIX   .admix
+        TREEMIX .treemix
 ```
 
 Converting GML to Extended Newick:
