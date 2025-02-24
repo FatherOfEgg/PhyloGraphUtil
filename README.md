@@ -6,6 +6,7 @@ A tool to compare and convert between different network formats.
 - Compare between 2 networks using
   - Robinson Foulds
   - Jaccard index
+  - F1 Score
 - Convert one format into another
   - **Note:** Most information about the network for certain things/attributes will be lost, such as internal node names, length, weights, etc.
   - While the graph may be the same in terms of structure, the output may look different, as in, `GML -> Extended Newick -> GML` may or may not produce something that looks different.
@@ -16,13 +17,13 @@ A tool to compare and convert between different network formats.
 - ❌ - Not supported
 - 📎 - Planned
 
-| Formats              | Open | Save |
-|----------------------|------|------|
-| GML                  | ✔    | ✔    |
-| Extended Newick      | ✔    | ✔    |
-| Admixtools admixture | ✔    | ✔    |
-| Simple admixture     | 📎    | 📎    |
-| Treemix              | 📎    | 📎    |
+| Formats              | Extension(s)  | Open | Save |
+|----------------------|---------------|------|------|
+| GML                  |    `.gml`     | ✔    | ✔    |
+| Extended Newick      | `.enwk, .ewk` | ✔    | ✔    |
+| Admixtools admixture |   `.admix`    | ✔    | ✔    |
+| Simple admixture     |   `.sadmix`   | 📎   | 📎    |
+| Treemix              |  `.treemix`   | ✔    | ❌   |
 
 ## Usage/Examples
 
@@ -41,7 +42,7 @@ SUBCOMMANDS:
         print   Prints basic info of the read-in graph(s).
 
 FORMATS:
-        GML, ENWK, ADMIX.  
+        GML, ENWK, ADMIX, TREEMIX.
 ```
 
 Converting GML to Extended Newick:
