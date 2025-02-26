@@ -128,5 +128,7 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     double maxRFDist = 2 * (leaves - 2);
     double percentage = (static_cast<double>(minDist) / maxRFDist) * 100;
 
-    std::cout << percentage << "% different (smallest RF dist: " << minDist << ")" << std::endl;
+    std::cout << percentage << "% difference between the two graphs" << std::endl;
+    std::cout << "Sum of smallest RF distances between trees: " << minDist << std::endl;
+    std::cout << "Sum of total number of non-trivial splits: " << maxRFDist << std::endl;
 }
