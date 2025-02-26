@@ -110,6 +110,8 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     std::unordered_map<std::string, uint64_t> idToIndex;
     std::unordered_map<uint64_t, std::string> indexToId;
 
+    std::unordered_map<uint64_t, std::string> labels;
+
     std::unordered_set<uint64_t> reticulations;
     std::unordered_map<uint64_t, std::vector<uint64_t>> nodeParents;
 
@@ -133,6 +135,8 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                         g.addNode();
 
                         curIndex++;
+                    } else if (attributeName == "label") {
+                        labels[curIndex - 1] = tokens[i].value;
                     } else if (tokens[i].type == TokenType::OPEN_BRACKET) {
                         unsigned int bracketCount = 1;
 
@@ -193,7 +197,8 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     for (size_t i = 0; i < g.adjList.size(); i++) {
         if (g.adjList[i].empty()) {
             g.leaves.push_back(i);
-            g.leafName[i] = indexToId[i];
+            // g.leafName[i] = indexToId[i];
+            g.leafName[i] = labels[i];
         }
     }
 
@@ -232,15 +237,15 @@ void saveGML(const Graph &g, const std::string &filename) {
         f << indent << "node [" << std::endl;
         indent += "    ";
 
-        f << indent << "id ";
+        f << indent << "id " << i << std::endl;
+
         auto nodeIt = g.leafName.find(i);
 
         if (nodeIt != g.leafName.end()) {
+            f << indent << "label \"";
             f << nodeIt->second;
-        } else {
-            f << i;
+            f << "\"" << std::endl;
         }
-        f << std::endl;
 
         indent = indent.substr(0, indent.length() - 4);
         f << indent << "]" << std::endl;
@@ -251,7 +256,8 @@ void saveGML(const Graph &g, const std::string &filename) {
 
             edges << indent << "source " << i << std::endl;
 
-            edges << indent << "target ";
+            edges << indent << "target " << t << std::endl;
+            /* edges << indent << "target ";
             auto targetIt = g.leafName.find(t);
 
             if (targetIt != g.leafName.end()) {
@@ -259,7 +265,7 @@ void saveGML(const Graph &g, const std::string &filename) {
             } else {
                 edges << t;
             }
-            edges << std::endl;
+            edges << std::endl; */
 
             indent = indent.substr(0, indent.length() - 4);
             edges << indent << "]" << std::endl;
