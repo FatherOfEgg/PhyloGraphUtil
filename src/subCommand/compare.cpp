@@ -36,7 +36,7 @@ static void compareUsage() {
     std::cout << "METHOD:" << std::endl;
     std::cout << "\trf\tRobinson Foulds." << std::endl;
     std::cout << "\tji\tJaccard index." << std::endl;
-    std::cout << "\tpr\tPrecision & Recall." << std::endl;
+    std::cout << "\tpr\tPrecision & Recall. (INPUT1 is original, INPUT2 will be compared to INPUT1" << std::endl;
     std::cout << std::endl;
     printFormats();
 }
