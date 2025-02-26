@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <unordered_set>
+#include <utility>
 
 #include "util/bitmask.h"
 #include "util/cluster.h"
@@ -10,7 +11,7 @@ using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
 using BitmaskMultiset = std::unordered_multiset<Bitmask, BitmaskHash>;
 
 template <typename T1, typename T2>
-static double f1Score(const T1 &original, const T2 &compare) {
+static std::pair<double, double> calculatePNR(const T1 &original, const T2 &compare) {
     uint64_t intersection = 0;
 
     for (const auto &e : original) {
@@ -31,6 +32,10 @@ static double f1Score(const T1 &original, const T2 &compare) {
         recall = static_cast<double>(intersection) / original.size();
     }
 
+    return std::make_pair(precision, recall);
+}
+
+static double calculateF1Score(double precision, double recall) {
     return 2.0 * (precision * recall) / (precision + recall);
 }
 
@@ -86,6 +91,21 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
     BitmaskSet originalUniq(originalDup.begin(), originalDup.end());
     BitmaskSet compareUniq(compareDup.begin(), compareDup.end());
 
-    std::cout << "F1 score(duplicates): " << f1Score(originalDup, compareDup) << std::endl;
-    std::cout << "F1 score(unique): " << f1Score(originalUniq, compareUniq) << std::endl;
+    std::cout << "Duplicates:" << std::endl;
+    std::pair<double, double> pnrDup = calculatePNR(originalDup, compareDup);
+    double f1scoreDup = calculateF1Score(pnrDup.first, pnrDup.second);
+
+    std::cout << "Precision: " << pnrDup.first << std::endl;
+    std::cout << "Recall: " << pnrDup.second << std::endl;
+    std::cout << "F1 score: " << f1scoreDup << std::endl;
+
+    std::cout << std::endl;
+
+    std::cout << "Unique:" << std::endl;
+    std::pair<double, double> pnrUniq = calculatePNR(originalUniq, compareUniq);
+    double f1scoreUniq = calculateF1Score(pnrUniq.first, pnrUniq.second);
+
+    std::cout << "Precision: " << pnrUniq.first << std::endl;
+    std::cout << "Recall: " << pnrUniq.second << std::endl;
+    std::cout << "F1 score: " << f1scoreUniq << std::endl;
 }
