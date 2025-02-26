@@ -3,11 +3,25 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <string>
 
 #include "../formats/format.h"
 #include "compare/jaccardIndex.h"
 #include "compare/precisionAndRecall.h"
 #include "compare/robinsonFoulds.h"
+
+typedef void (*compareFunc)(const Graph &, const Graph &);
+
+struct CompareMethod {
+    std::string name;
+    compareFunc fn;
+};
+
+static CompareMethod compareMethods[] = {
+    {"rf", robinsonFoulds},
+    {"ji", jaccardIndex},
+    {"pr", precisionAndRecall},
+};
 
 static void compareUsage() {
     std::cout << "PhyloGraphUtil compare" << std::endl;
@@ -38,6 +52,21 @@ void compare(int argc, char **argv) {
         std::exit(EXIT_SUCCESS);
     }
 
+    compareFunc cf = nullptr;
+
+    for (const CompareMethod &cm : compareMethods) {
+        if (argv[0] == cm.name) {
+            cf = cm.fn;
+            break;
+        }
+    }
+
+    if (cf == nullptr) {
+        std::cout << "'" << argv[0] << "' is not a valid method." << std::endl;
+        compareUsage();
+        std::exit(EXIT_SUCCESS);
+    }
+
     Graph g1 = {.format = FormatType::INVALID};
     Graph g2 = {.format = FormatType::INVALID};
 
@@ -50,15 +79,5 @@ void compare(int argc, char **argv) {
         std::exit(EXIT_FAILURE);
     }
 
-    if (!strcmp(argv[0], "rf")) {
-        robinsonFoulds(g1, g2);
-    } else if (!strcmp(argv[0], "ji")) {
-        jaccardIndex(g1, g2);
-    } else if (!strcmp(argv[0], "pr")) {
-        precisionAndRecall(g1, g2);
-    } else {
-        std::cout << "'" << argv[0] << "' is not a valid method." << std::endl;
-        compareUsage();
-        std::exit(EXIT_SUCCESS);
-    }
+    cf(g1, g2);
 }
