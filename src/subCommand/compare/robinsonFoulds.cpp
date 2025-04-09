@@ -72,9 +72,6 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     std::vector<BitmaskSet> c1 = computeClusters(g1, bitmaskId);
     std::vector<BitmaskSet> c2 = computeClusters(g2, bitmaskId);
 
-    // std::cout << c1.size() << std::endl;
-    // std::cout << c2.size() << std::endl;
-
     size_t n = c1.size();
     size_t m = c2.size();
     size_t size = std::max(n, m);

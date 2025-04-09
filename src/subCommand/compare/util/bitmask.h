@@ -18,6 +18,8 @@ public:
 
     const uint64_t *getBitmask() const;
 
+    uint64_t countBits() const;
+
 private:
     uint64_t mBitmask[BITMASK_SIZE];
 };

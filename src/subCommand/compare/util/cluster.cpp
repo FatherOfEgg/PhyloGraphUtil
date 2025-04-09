@@ -45,7 +45,9 @@ static BitmaskSet computeClustersHelper(
             }
         }
 
-        res.insert(bm);
+        if (bm.countBits() > 1) {
+            res.insert(bm);
+        }
         return bm;
     };
 

@@ -44,6 +44,22 @@ const uint64_t *Bitmask::getBitmask() const {
     return mBitmask;
 }
 
+uint64_t Bitmask::countBits() const {
+    uint64_t count = 0;
+
+    // Brian Kernighan's Algorithm
+    for (size_t i = 0; i < BITMASK_SIZE; i++) {
+        uint64_t v = mBitmask[i];
+
+        while (v) {
+            v &= (v - 1);
+            count++;
+        }
+    }
+
+    return count;
+}
+
 size_t BitmaskHash::operator()(const Bitmask &bm) const {
     size_t hash = 0;
 
