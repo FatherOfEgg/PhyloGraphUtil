@@ -21,7 +21,7 @@ static BitmaskSet computeClustersHelper(
 
         if (leafIt != g.leafName.end()) {
             uint64_t id = bitmaskId.at(leafIt->second);
-            bm.setBit(1 << id);
+            bm.setBit(id);
         } else {
             for (const uint64_t &c : g.adjList[node]) {
                 auto it = g.reticulations.find(c);
