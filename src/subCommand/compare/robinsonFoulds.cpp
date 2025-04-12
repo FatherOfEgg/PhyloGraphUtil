@@ -16,6 +16,7 @@
 #include "util/lap.h"
 
 using PSW = std::vector<std::pair<uint64_t, uint64_t>>;
+using ClusterMap = std::unordered_map<uint64_t, std::pair<uint64_t, uint64_t>>;
 
 // Post order sequence with weights (PSW)
 static PSW genPSWHelper(
@@ -93,6 +94,54 @@ static std::vector<PSW> genPSWs(
     }
 
     return psw;
+}
+
+static ClusterMap genClusterMap(const Graph &g, const PSW &psw) {
+    ClusterMap cm;
+    cm.reserve(g.leafName.size());
+
+    uint64_t leafCode = 0;
+    std::unordered_map<uint64_t, uint64_t> leafCodes;
+    leafCodes.reserve(g.leafName.size());
+
+    uint64_t rightLeaf = 0;
+
+    for (size_t i = 0; i < psw.size(); i++) {
+        const std::pair<uint64_t, uint64_t> p = psw[i];
+        // If leaf
+        if (p.second == 0) {
+            leafCode++;
+            rightLeaf = leafCode;
+            leafCodes[p.first] = leafCode;
+        } else {
+            uint64_t leafLeafIndex = psw[i - p.second].first;
+            uint64_t leftLeaf = leafCodes[leafLeafIndex];
+
+            i++;
+
+            uint64_t loc;
+            if (psw[i].second == 0) {
+                loc = rightLeaf;
+            } else {
+                loc = leftLeaf;
+            }
+
+            cm[loc] = std::make_pair(leftLeaf, rightLeaf);
+        }
+    }
+
+    return cm;
+}
+
+static void extractClusters(const PSW &psw) {
+    for (size_t i = 0; i < psw.size(); i++) {
+        const std::pair<uint64_t, uint64_t> p = psw[i];
+
+        // If internal node
+        if (p.second != 0) {
+            uint64_t leftLeaf = psw[i - p.second].first;
+        }
+    }
 }
 
 static uint64_t rfDist(
