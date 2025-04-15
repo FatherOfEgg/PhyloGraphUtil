@@ -96,9 +96,14 @@ static std::vector<PSW> genPSWs(
     return psw;
 }
 
+// BUILD
 static ClusterMap genClusterMap(const Graph &g, const PSW &psw) {
     ClusterMap cm;
     cm.reserve(g.leafName.size());
+
+    for (size_t i = 0; i < g.leafName.size(); i++) {
+        cm[i] = std::make_pair(0, 0);
+    }
 
     uint64_t leafCode = 0;
     std::unordered_map<uint64_t, uint64_t> leafCodes;
@@ -114,19 +119,17 @@ static ClusterMap genClusterMap(const Graph &g, const PSW &psw) {
             rightLeaf = leafCode;
             leafCodes[p.first] = leafCode;
         } else {
-            uint64_t leafLeafIndex = psw[i - p.second].first;
-            uint64_t leftLeaf = leafCodes[leafLeafIndex];
-
-            i++;
+            uint64_t leftLeafIndex = psw[i - p.second].first;
+            uint64_t leftLeaf = leafCodes[leftLeafIndex];
 
             uint64_t loc;
-            if (psw[i].second == 0) {
+            if (i + 1 >= psw.size() || psw[i + 1].second == 0) {
                 loc = rightLeaf;
             } else {
                 loc = leftLeaf;
             }
 
-            cm[loc] = std::make_pair(leftLeaf, rightLeaf);
+            cm[loc - 1] = std::make_pair(leftLeaf, rightLeaf);
         }
     }
 
@@ -163,6 +166,45 @@ static uint64_t rfDist(
 }
 
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
+    // auto x = genPSWs(g1);
+    PSW psw = {
+        std::make_pair(10, 0),
+        std::make_pair(7, 0),
+        std::make_pair(15, 2),
+        std::make_pair(8, 0),
+        std::make_pair(11, 0),
+        std::make_pair(16, 2),
+        std::make_pair(6, 0),
+        std::make_pair(19, 4),
+        std::make_pair(12, 0),
+        std::make_pair(4, 0),
+        std::make_pair(2, 0),
+        std::make_pair(1, 0),
+        std::make_pair(17, 2),
+        std::make_pair(20, 4),
+        std::make_pair(21, 6),
+        std::make_pair(14, 0),
+        std::make_pair(5, 0),
+        std::make_pair(9, 0),
+        std::make_pair(13, 0),
+        std::make_pair(18, 3),
+        std::make_pair(3, 0),
+        std::make_pair(22, 21),
+    };
+    auto y = genClusterMap(g1, psw);
+
+    for (const auto &e : g1.leafName) {
+        std::cout << e.first << ": " << e.second << std::endl;
+    }
+    std::cout << std::endl;
+
+    for (const auto &e : y) {
+        const std::pair<uint64_t, uint64_t> p = e.second;
+        std::cout << e.first << ": (" << p.first << "," << p.second << ")" << std::endl;
+    }
+
+    std::exit(0);
+
     if (g1.leaves.size() != g2.leaves.size()) {
         std::cerr << "Trees do not have the same number of leaves." << std::endl;
         std::exit(EXIT_FAILURE);
