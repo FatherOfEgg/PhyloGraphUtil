@@ -13,11 +13,9 @@
 #include <utility>
 #include <vector>
 
-#include "util/cluster.h"
 #include "util/lap.h"
 
 using PSW = std::vector<std::pair<uint64_t, uint64_t>>;
-using ClusterMap = std::unordered_map<uint64_t, std::pair<uint64_t, uint64_t>>;
 
 struct LRNW {
     uint64_t L, R, N, W;
@@ -72,7 +70,7 @@ static PSW genPSWHelper(
     const Graph &g,
     const std::unordered_map<uint64_t, uint8_t> &curEdges
 ) {
-    std::vector<std::pair<uint64_t, uint64_t>> res;
+    PSW res;
 
     std::function<uint64_t(uint64_t)> postOrder = [&](uint64_t node) -> uint64_t {
         uint64_t weight = 0;
@@ -146,36 +144,32 @@ static std::vector<PSW> genPSWs(
 }
 
 // COMCLUST
-static void extractClusters(const Graph &g1, const std::vector<PSW> &psw1, const std::vector<PSW> &psw2) {
-    std::vector<ClusterMap> cms;
-    cms.reserve(psw1.size());
+static uint64_t rf_dist(
+    const Graph &g1, const PSW &psw1,
+    const Graph &g2, const PSW &psw2
+) {
+    uint64_t res = 0;
 
-    for (size_t i = 0; i < psw1.size(); i++) {
-        // cms.emplace_back(genClusterMap(g1, psw1[i]));
-    }
+    ClusterTable ct(g1, psw1);
 
-    // Loop through cluster maps from psw1
+    std::stack<LRNW> s;
 
-    for (const ClusterMap &cm : cms) {
-        for (const PSW &p2 : psw2) {
-            std::stack<LRNW> s;
+    for (size_t i = 0; i < psw2.size(); i++) {
+        const std::pair<uint64_t, uint64_t> p = psw2[i];
 
-            for (size_t i = 0; i < p2.size(); i++) {
-                const std::pair<uint64_t, uint64_t> p = p2[i];
+        // If leaf
+        if (p.second == 0) {
+            uint64_t leftLeaf = psw2[i - p.second].first;
+            s.push({});
+        } else {
 
-                // If leaf
-                if (p.second == 0) {
-                    uint64_t leftLeaf = p2[i - p.second].first;
-                    s.push({});
-                } else {
-
-                }
-            }
         }
     }
+
+    return res;
 }
 
-static uint64_t rfDist(
+/* static uint64_t rfDist(
     BitmaskSet clusters1,
     BitmaskSet clusters2
 ) {
@@ -191,7 +185,7 @@ static uint64_t rfDist(
     // std::cout << "diff: " << clusters1.size() + clusters2.size() - 2 * commonClusters << std::endl;
 
     return clusters1.size() + clusters2.size() - 2 * commonClusters;
-}
+} */
 
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
     // auto x = genPSWs(g1);
@@ -256,24 +250,24 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     }
 
     // Setup bitmask ids
-    std::unordered_map<std::string, uint64_t> bitmaskId;
+    /* std::unordered_map<std::string, uint64_t> bitmaskId;
 
     leaves1.insert(leaves2.begin(), leaves2.end());
 
     for (const std::string &l : leaves1) {
         bitmaskId[l] = bitmaskId.size();
-    }
+    } */
 
     /* if (g1.reticulations.size() != g2.reticulations.size()) {
         std::cerr << "Trees do not have the same number of reticulations." << std::endl;
         std::exit(EXIT_FAILURE);
     } */
 
-    std::vector<BitmaskSet> c1 = computeClusters(g1, bitmaskId);
-    std::vector<BitmaskSet> c2 = computeClusters(g2, bitmaskId);
+    std::vector<PSW> p1 = genPSWs(g1);
+    std::vector<PSW> p2 = genPSWs(g2);
 
-    size_t n = c1.size();
-    size_t m = c2.size();
+    size_t n = p1.size();
+    size_t m = p2.size();
     size_t size = std::max(n, m);
 
     std::vector<std::vector<double>> costMatrix(size, std::vector<double>(size, 0.0));
@@ -281,13 +275,13 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     uint64_t minDist = std::numeric_limits<uint64_t>::max();
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < m; j++) {
-            uint64_t dist = rfDist(c1[i], c2[j]);
+            uint64_t dist = rf_dist(g1, p1[i], g2, p2[j]);
             
             // If we find a perfect match
-            if (dist == 0) {
+            /* if (dist == 0) {
                 std::cout << "0% different (smallest RF dist: 0)" << std::endl;
                 return;
-            }
+            } */
 
             costMatrix[i][j] = static_cast<double>(dist);
 
