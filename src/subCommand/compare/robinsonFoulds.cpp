@@ -6,6 +6,7 @@
 #include <functional>
 #include <iostream>
 #include <limits>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,6 +18,54 @@
 
 using PSW = std::vector<std::pair<uint64_t, uint64_t>>;
 using ClusterMap = std::unordered_map<uint64_t, std::pair<uint64_t, uint64_t>>;
+
+struct LRNW {
+    uint64_t L, R, N, W;
+};
+
+struct ClusterTable {
+public:
+    ClusterTable(const Graph &g, const PSW &psw) {
+        uint64_t leafCode = 0;
+        std::unordered_map<uint64_t, uint64_t> leafCodes;
+        leafCodes.reserve(g.leafName.size());
+
+        uint64_t rightLeaf = 0;
+
+        for (size_t i = 0; i < psw.size(); i++) {
+            const std::pair<uint64_t, uint64_t> p = psw[i];
+            // If leaf
+            if (p.second == 0) {
+                rightLeaf = leafCode;
+                leafCodes[p.first] = leafCode;
+                leafCode++;
+            } else {
+                uint64_t leftLeafIndex = psw[i - p.second].first;
+                uint64_t leftLeaf = leafCodes[leftLeafIndex];
+
+                ct[leftLeaf].insert(rightLeaf);
+            }
+        }
+
+    }
+
+    void encode() {
+
+    }
+
+    bool isClust(uint64_t L, uint64_t R) {
+        auto itL = ct.find(L);
+
+        if (itL == ct.end()) {
+            return false;
+        }
+
+        return itL->second.find(R) != itL->second.end();
+    }
+
+public:
+    std::unordered_map<uint64_t, std::unordered_set<uint64_t>> ct;
+};
 
 // Post order sequence with weights (PSW)
 static PSW genPSWHelper(
@@ -96,53 +145,32 @@ static std::vector<PSW> genPSWs(
     return psw;
 }
 
-// BUILD
-static ClusterMap genClusterMap(const Graph &g, const PSW &psw) {
-    ClusterMap cm;
-    cm.reserve(g.leafName.size());
+// COMCLUST
+static void extractClusters(const Graph &g1, const std::vector<PSW> &psw1, const std::vector<PSW> &psw2) {
+    std::vector<ClusterMap> cms;
+    cms.reserve(psw1.size());
 
-    for (size_t i = 0; i < g.leafName.size(); i++) {
-        cm[i] = std::make_pair(0, 0);
+    for (size_t i = 0; i < psw1.size(); i++) {
+        // cms.emplace_back(genClusterMap(g1, psw1[i]));
     }
 
-    uint64_t leafCode = 0;
-    std::unordered_map<uint64_t, uint64_t> leafCodes;
-    leafCodes.reserve(g.leafName.size());
+    // Loop through cluster maps from psw1
 
-    uint64_t rightLeaf = 0;
+    for (const ClusterMap &cm : cms) {
+        for (const PSW &p2 : psw2) {
+            std::stack<LRNW> s;
 
-    for (size_t i = 0; i < psw.size(); i++) {
-        const std::pair<uint64_t, uint64_t> p = psw[i];
-        // If leaf
-        if (p.second == 0) {
-            leafCode++;
-            rightLeaf = leafCode;
-            leafCodes[p.first] = leafCode;
-        } else {
-            uint64_t leftLeafIndex = psw[i - p.second].first;
-            uint64_t leftLeaf = leafCodes[leftLeafIndex];
+            for (size_t i = 0; i < p2.size(); i++) {
+                const std::pair<uint64_t, uint64_t> p = p2[i];
 
-            uint64_t loc;
-            if (i + 1 >= psw.size() || psw[i + 1].second == 0) {
-                loc = rightLeaf;
-            } else {
-                loc = leftLeaf;
+                // If leaf
+                if (p.second == 0) {
+                    uint64_t leftLeaf = p2[i - p.second].first;
+                    s.push({});
+                } else {
+
+                }
             }
-
-            cm[loc - 1] = std::make_pair(leftLeaf, rightLeaf);
-        }
-    }
-
-    return cm;
-}
-
-static void extractClusters(const PSW &psw) {
-    for (size_t i = 0; i < psw.size(); i++) {
-        const std::pair<uint64_t, uint64_t> p = psw[i];
-
-        // If internal node
-        if (p.second != 0) {
-            uint64_t leftLeaf = psw[i - p.second].first;
         }
     }
 }
@@ -191,16 +219,18 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
         std::make_pair(3, 0),
         std::make_pair(22, 21),
     };
-    auto y = genClusterMap(g1, psw);
 
-    for (const auto &e : g1.leafName) {
-        std::cout << e.first << ": " << e.second << std::endl;
-    }
+    // for (const auto &e : g1.leafName) {
+    //     std::cout << e.first << ": " << e.second << std::endl;
+    // }
     std::cout << std::endl;
 
-    for (const auto &e : y) {
-        const std::pair<uint64_t, uint64_t> p = e.second;
-        std::cout << e.first << ": (" << p.first << "," << p.second << ")" << std::endl;
+    ClusterTable a(g1, psw);
+
+    for (const auto &x : a.ct) {
+        for (const auto &y : x.second) {
+            std::cout << "(" << x.first << "," << y << ")" << std::endl;
+        }
     }
 
     std::exit(0);
