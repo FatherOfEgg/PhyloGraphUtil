@@ -25,21 +25,21 @@ struct ClusterTable {
 public:
     ClusterTable(const Graph &g, const PSW &psw) {
         uint64_t leafCode = 0;
-        std::unordered_map<uint64_t, uint64_t> leafCodes;
-        leafCodes.reserve(g.leafName.size());
+        internalLabels.reserve(g.leafName.size());
 
         uint64_t rightLeaf = 0;
 
         for (size_t i = 0; i < psw.size(); i++) {
             const std::pair<uint64_t, uint64_t> p = psw[i];
+
             // If leaf
             if (p.second == 0) {
                 rightLeaf = leafCode;
-                leafCodes[p.first] = leafCode;
+                internalLabels[p.first] = leafCode;
                 leafCode++;
             } else {
                 uint64_t leftLeafIndex = psw[i - p.second].first;
-                uint64_t leftLeaf = leafCodes[leftLeafIndex];
+                uint64_t leftLeaf = internalLabels[leftLeafIndex];
 
                 ct[leftLeaf].insert(rightLeaf);
             }
@@ -47,8 +47,8 @@ public:
 
     }
 
-    void encode() {
-
+    uint64_t encode(uint64_t v) {
+        return internalLabels.at(v);
     }
 
     bool isClust(uint64_t L, uint64_t R) {
@@ -63,6 +63,7 @@ public:
 
 public:
     std::unordered_map<uint64_t, std::unordered_set<uint64_t>> ct;
+    std::unordered_map<uint64_t, uint64_t> internalLabels;
 };
 
 // Post order sequence with weights (PSW)
