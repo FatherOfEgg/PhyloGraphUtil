@@ -158,12 +158,32 @@ static uint64_t rf_dist(
     for (size_t i = 0; i < psw2.size(); i++) {
         const std::pair<uint64_t, uint64_t> p = psw2[i];
 
-        // If leaf
-        if (p.second == 0) {
-            uint64_t leftLeaf = psw2[i - p.second].first;
-            s.push({});
-        } else {
+        uint64_t w = p.second;
 
+        // If leaf
+        if (w == 0) {
+            uint64_t leftLeaf = psw2[i - p.second].first;
+            s.emplace(ct.encode(p.first), ct.encode(p.first), 1, 1);
+        } else {
+            LRNW lrnw = {UINT64_MAX, 0, 0, 1};
+
+            do {
+                LRNW temp = s.top();
+                s.pop();
+
+                lrnw.L = std::min(lrnw.L, temp.L);
+                lrnw.R = std::max(lrnw.R, temp.R);
+                lrnw.N += temp.N;
+                lrnw.W += temp.W;
+
+                w -= temp.W;
+            } while(w == 0);
+
+            s.push(lrnw);
+
+            if (lrnw.N == lrnw.R - lrnw.L + 1) {
+
+            }
         }
     }
 
