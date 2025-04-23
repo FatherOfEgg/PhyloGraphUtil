@@ -17,10 +17,6 @@
 
 using PSW = std::vector<std::pair<uint64_t, uint64_t>>;
 
-struct LRNW {
-    uint64_t L, R, N, W;
-};
-
 struct ClusterTable {
 public:
     ClusterTable(const Graph &g, const PSW &psw) {
@@ -153,7 +149,7 @@ static uint64_t rf_dist(
 
     ClusterTable ct(g1, psw1);
 
-    std::stack<LRNW> s;
+    std::stack<std::pair<uint64_t, uint64_t>> s;
 
     for (size_t i = 0; i < psw2.size(); i++) {
         const std::pair<uint64_t, uint64_t> p = psw2[i];
@@ -162,27 +158,28 @@ static uint64_t rf_dist(
 
         // If leaf
         if (w == 0) {
-            uint64_t leftLeaf = psw2[i - p.second].first;
-            s.emplace(ct.encode(p.first), ct.encode(p.first), 1, 1);
+            s.emplace(ct.encode(p.first), ct.encode(p.first));
         } else {
-            LRNW lrnw = {UINT64_MAX, 0, 0, 1};
+            std::pair<uint64_t, uint64_t> lr = std::make_pair(UINT64_MAX, 0);
+            uint64_t n = 0;
 
             do {
-                LRNW temp = s.top();
+                std::pair<uint64_t, uint64_t> temp = s.top();
                 s.pop();
 
-                lrnw.L = std::min(lrnw.L, temp.L);
-                lrnw.R = std::max(lrnw.R, temp.R);
-                lrnw.N += temp.N;
-                lrnw.W += temp.W;
+                lr.first = std::min(lr.first, temp.first);
+                lr.second = std::max(lr.second, temp.second);
 
-                w -= temp.W;
-            } while(w == 0);
+                n++;
+                w--;
+            } while(w != 0);
 
-            s.push(lrnw);
+            s.push(lr);
 
-            if (lrnw.N == lrnw.R - lrnw.L + 1) {
-
+            if (n == lr.second - lr.first + 1) {
+                std::cout << "(" << lr.first << "," << lr.second;
+                // std::cout << "," << n;
+                std::cout << ")" << std::endl;
             }
         }
     }
@@ -238,15 +235,29 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     // for (const auto &e : g1.leafName) {
     //     std::cout << e.first << ": " << e.second << std::endl;
     // }
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
-    ClusterTable a(g1, psw);
+    // ClusterTable a(g1, psw);
+    //
+    // for (const auto &x : a.ct) {
+    //     for (const auto &y : x.second) {
+    //         std::cout << "(" << x.first << "," << y << ")" << std::endl;
+    //     }
+    // }
 
-    for (const auto &x : a.ct) {
-        for (const auto &y : x.second) {
-            std::cout << "(" << x.first << "," << y << ")" << std::endl;
-        }
-    }
+    PSW psw1 {
+        std::make_pair(0, 0),
+        std::make_pair(1, 0),
+        std::make_pair(2, 2),
+    };
+
+    PSW psw2 {
+        std::make_pair(0, 0),
+        std::make_pair(1, 0),
+        std::make_pair(2, 2),
+    };
+
+    rf_dist(g1, psw1, g2, psw2);
 
     std::exit(0);
 
