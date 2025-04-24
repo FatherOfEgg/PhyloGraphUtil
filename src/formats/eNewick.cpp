@@ -302,10 +302,10 @@ void saveENWK(const Graph &g, const std::string &filename) {
         if (numChildren != 0) {
             f << "(";
 
-            for (size_t i = numChildren; i > 0; i--) {
-                dfs(g.adjList[node][i - 1]);
+            for (size_t i = 0; i < numChildren; i++) {
+                dfs(g.adjList[node][i]);
 
-                if (i != 1) {
+                if (i != numChildren - 1) {
                     f << ", ";
                 }
             }
