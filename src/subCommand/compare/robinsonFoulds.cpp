@@ -34,12 +34,15 @@ public:
 
             // If leaf
             if (p.second == 0) {
+                std::string leafName = g.leafName.at(p.first);
+                internalLabels[leafName] = leafCode;
+
                 rightLeaf = leafCode;
-                internalLabels[p.first] = leafCode;
                 leafCode++;
             } else {
                 uint64_t leftLeafIndex = psw[i - p.second].first;
-                uint64_t leftLeaf = internalLabels[leftLeafIndex];
+                std::string leafName = g.leafName.at(leftLeafIndex);
+                uint64_t leftLeaf = internalLabels[leafName];
 
                 ct[leftLeaf].insert(rightLeaf);
             }
@@ -47,8 +50,8 @@ public:
 
     }
 
-    uint64_t encode(uint64_t v) {
-        return internalLabels.at(v);
+    uint64_t encode(const std::string &l) {
+        return internalLabels.at(l);
     }
 
     bool isClust(uint64_t L, uint64_t R) {
@@ -63,7 +66,7 @@ public:
 
 public:
     std::unordered_map<uint64_t, std::unordered_set<uint64_t>> ct;
-    std::unordered_map<uint64_t, uint64_t> internalLabels;
+    std::unordered_map<std::string, uint64_t> internalLabels;
 };
 
 // Post order sequence with weights (PSW)
@@ -162,7 +165,10 @@ static uint64_t rf_dist(
 
         // If leaf
         if (w == 0) {
-            s.push({ct.encode(p.first), ct.encode(p.first), 1, 1});
+            std::string leafName = g2.leafName.at(p.first);
+            uint64_t encode = ct.encode(leafName);
+
+            s.push({encode, encode, 1, 1});
         } else {
             LRNW lrnw = {UINT64_MAX, 0, 0, 1};
 
