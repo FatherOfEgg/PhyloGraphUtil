@@ -116,8 +116,7 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
     }
 
     uint64_t curIndex = 0;
-    std::stack<uint64_t> edgeTargets;
-    std::stack<uint64_t> numChildren;
+    std::stack<std::vector<uint64_t>> children;
 
     bool isLeafHybrid = false;
     std::unordered_map<std::string, uint64_t> hybrids;
@@ -128,12 +127,12 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
         // (In HYBRID_ID instead of LEAF_NAME)
         if (tokens[i].type == TokenType::HYBRID_ID) {
             if (isLeafHybrid) {
-                numChildren.pop();
+                children.pop();
             }
 
             auto it = hybrids.find(tokens[i].value);
             if (it != hybrids.end()) {
-                edgeTargets.push(it->second);
+                children.top().push_back(it->second);
 
                 if (isLeafHybrid) {
                     g.leaves.push_back(it->second);
@@ -141,7 +140,7 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                 }
             } else {
                 g.addNode();
-                edgeTargets.push(curIndex);
+                children.top().push_back(curIndex);
 
                 if (isLeafHybrid) {
                     g.leaves.push_back(curIndex);
@@ -154,7 +153,6 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                 curIndex++;
             }
 
-            numChildren.top()++;
             isLeafHybrid = false;
         } else if (tokens[i].type == TokenType::LEAF_NAME) {
             if (tokens[i - 1].type == TokenType::OPEN_PARENTHESIS
@@ -170,66 +168,55 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
             }
 
             g.addNode();
-            edgeTargets.push(curIndex);
+            children.top().push_back(curIndex);
 
             g.leaves.push_back(curIndex);
             g.leafName[curIndex] = tokens[i].value;
 
             curIndex++;
-
-            numChildren.top()++;
         } else if (tokens[i].type == TokenType::INTERNAL_NAME) {
             bool isHybrid = tokens[i + 1].type == TokenType::HYBRID_ID;
             auto hybridIt = hybrids.find(tokens[i + 1].value);
 
             if (isHybrid && hybridIt == hybrids.end()) {
-                g.addNode();
-
                 g.reticulations[curIndex];
                 hybrids[tokens[i + 1].value] = curIndex;
-
-                curIndex++;
             }
 
-            for (unsigned int c = 0; c < numChildren.top(); c++) {
-                uint64_t target = edgeTargets.top();
+            if (!children.top().empty()) {
+                uint64_t nodeIndex = curIndex;
 
                 if (isHybrid) {
-                    g.addEdge(hybrids.at(tokens[i + 1].value), target);
-                } else {
-                    g.addEdge(curIndex, target);
+                    nodeIndex = hybrids.at(tokens[i + 1].value);
                 }
 
-                auto it = g.reticulations.find(target);
-                if (it != g.reticulations.end()) {
-                    g.reticulations[target].push_back(curIndex);
-                }
+                g.addNode();
+                g.adjList[nodeIndex] = std::move(children.top());
+                children.pop();
 
-                edgeTargets.pop();
+                for (const uint64_t &n : g.adjList[nodeIndex]) {
+                    auto it = g.reticulations.find(n);
+
+                    if (it != g.reticulations.end()) {
+                        g.reticulations[n].push_back(curIndex);
+                    }
+                }
             }
 
             if (tokens[i + 1].type == TokenType::SEMI_COLON) {
                 continue;
             }
 
-            numChildren.pop();
-
             if (isHybrid) {
-                edgeTargets.push(hybrids.at(tokens[i + 1].value));
+                children.top().push_back(hybrids.at(tokens[i + 1].value));
 
                 i++;
             } else {
-                g.addNode();
-                edgeTargets.push(curIndex);
-
+                children.top().push_back(curIndex);
                 curIndex++;
             }
-
-            if (!numChildren.empty()) {
-                numChildren.top()++;
-            }
         } else if (tokens[i].type == TokenType::OPEN_PARENTHESIS) {
-            numChildren.push(0);
+            children.emplace();
         }
     }
 
