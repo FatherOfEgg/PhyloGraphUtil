@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <vector>
 
 // Post order sequence with weights (PSW)
 static PSW genPSWHelper(
@@ -16,6 +17,9 @@ static PSW genPSWHelper(
         auto leafIt = g.leafName.find(node);
 
         if (leafIt == g.leafName.end()) {
+            uint64_t childrenWeight = 0;
+            bool ignoreNode = false;
+
             for (const uint64_t &c : g.adjList[node]) {
                 auto it = g.reticulations.find(c);
 
@@ -29,11 +33,26 @@ static PSW genPSWHelper(
                     // Continue if there's "no" edge from reticulation's parent
                     // to the reticulation c
                     if (parents[curEdge] != node) {
+                        ignoreNode = true;
                         continue;
                     }
                 }
 
-                weight += postOrder(c);
+                childrenWeight += postOrder(c);
+            }
+
+            if (ignoreNode) {
+                // If this node has an edge to a reticulation,
+                // but currently doesn't "have" a connection to it currently,
+                // then we ignore this node and don't consider it in the PSW.
+                //
+                // For example, if we have: ((1, (2)#H1), (#H1, 3)),
+                // and we extract a subtree from it, it would be:
+                // ((1, 2), (3)). However, we don't want it as "(3)",
+                // instead we want the subree to be: ((1, 2), 3)
+                return childrenWeight;
+            } else {
+                weight += childrenWeight;
             }
         }
 
