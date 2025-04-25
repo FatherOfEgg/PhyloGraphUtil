@@ -2,7 +2,24 @@
 
 #include <iostream>
 
-#include "util/cluster.h"
+#include "util/clusterTable.h"
+#include "util/psw.h"
+
+using ClusterSet = std::unordered_map<uint64_t, std::unordered_set<uint64_t>>;
+
+static ClusterSet extractClusters(const Graph &g, const std::vector<PSW> &psws) {
+    ClusterSet res;
+
+    for (const PSW &psw : psws) {
+        ClusterTable ct(g, psw);
+
+        for (const auto &l : ct.ct) {
+            res[l.first].insert(l.second.begin(), l.second.end());
+        }
+    }
+
+    return res;
+}
 
 void jaccardIndex(const Graph &g1, const Graph &g2) {
     if (g1.leaves.size() != g2.leaves.size()) {
@@ -25,45 +42,38 @@ void jaccardIndex(const Graph &g1, const Graph &g2) {
         std::exit(EXIT_FAILURE);
     }
 
-    // Setup bitmask ids
-    std::unordered_map<std::string, uint64_t> bitmaskId;
+    std::vector<PSW> psws1 = genPSWs(g1);
+    std::vector<PSW> psws2 = genPSWs(g2);
 
-    leaves1.insert(leaves2.begin(), leaves2.end());
+    ClusterSet c1 = extractClusters(g1, psws1);
+    ClusterSet c2 = extractClusters(g2, psws2);
 
-    for (const std::string &l : leaves1) {
-        bitmaskId[l] = bitmaskId.size();
-    }
+    double intersection = 0.0;
 
-    std::vector<BitmaskSet> c1 = computeClusters(g1, bitmaskId);
-    std::vector<BitmaskSet> c2 = computeClusters(g2, bitmaskId);
+    for (const auto &p : c1) {
+        if (c2.find(p.first) == c2.end()) {
+            continue;
+        }
 
-    // Merge all the bitmask sets into 1 set
-    // TODO: Find a different way so that we don't have to
-    // merge them later and instead just insert into a set.
-    // Probably modify computeClusters
-    BitmaskSet bs1;
-    BitmaskSet bs2;
-
-    for (const BitmaskSet &bs : c1) {
-        bs1.insert(bs.begin(), bs.end());
-    }
-
-    for (const BitmaskSet &bs : c2) {
-        bs2.insert(bs.begin(), bs.end());
-    }
-
-    uint64_t intersection = 0;
-
-    for (const Bitmask &bs : bs1) {
-        if (bs2.find(bs) != bs2.end()) {
-            intersection++;
+        for (const auto &e : p.second) {
+            if (c2[p.first].find(e) != c2[p.first].end()) {
+                intersection++;
+            }
         }
     }
 
     // Union
-    bs1.insert(bs2.begin(), bs2.end());
+    for (const auto &p : c2) {
+        c1[p.first].insert(p.second.begin(), p.second.end());
+    }
 
-    double similarity = static_cast<double>(intersection) / bs1.size();
+    double unionSize = 0.0;
+
+    for (const auto &p : c1) {
+        unionSize += p.second.size();
+    }
+
+    double similarity = intersection / unionSize;
     double diff = 1 - similarity;
     double percentage = diff * 100.0;
 

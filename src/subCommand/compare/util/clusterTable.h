@@ -9,8 +9,6 @@
 #include "../../../graph.h"
 #include "psw.h"
 
-using Clusters = std::vector<std::pair<uint64_t, uint64_t>>;
-
 struct LRNW {
     uint64_t L, R, N, W;
 };

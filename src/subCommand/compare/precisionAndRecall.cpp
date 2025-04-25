@@ -1,35 +1,58 @@
 #include "precisionAndRecall.h"
 
+#include <cstdint>
 #include <iostream>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
-#include "util/bitmask.h"
-#include "util/cluster.h"
+#include "util/clusterTable.h"
+#include "util/psw.h"
 
-using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
-using BitmaskMultiset = std::unordered_multiset<Bitmask, BitmaskHash>;
+using ClusterMultiset = std::unordered_map<uint64_t, std::unordered_multiset<uint64_t>>;
+using ClusterSet = std::unordered_map<uint64_t, std::unordered_set<uint64_t>>;
 
 template <typename T1, typename T2>
 static std::pair<double, double> calculatePNR(const T1 &original, const T2 &compare) {
     uint64_t intersection = 0;
 
-    for (const auto &e : original) {
-        if (compare.find(e) != compare.end()) {
-            intersection++;
+    for (const auto &l : original) {
+        auto it = compare.find(l.first);
+
+        if (it == compare.end()) {
+            continue;
         }
+
+        for (const auto &r : l.second) {
+            uint64_t originalCount = l.second.count(r);
+            uint64_t compareCount = it->second.count(r);
+
+            if (compareCount > 0) {
+                intersection += std::min(originalCount, compareCount);
+            }
+        }
+    }
+
+    uint64_t originalSize = 0;
+    for (const auto &e : original) {
+        originalSize += e.second.size();
+    }
+
+    uint64_t compareSize = 0;
+    for (const auto &e : compare) {
+        compareSize += e.second.size();
     }
 
     double precision = 0.0;
 
-    if (compare.size() > 0.0) {
-        precision = static_cast<double>(intersection) / compare.size();
+    if (compareSize > 0.0) {
+        precision = static_cast<double>(intersection) / compareSize;
     }
 
     double recall = 0.0;
 
-    if (original.size() > 0.0) {
-        recall = static_cast<double>(intersection) / original.size();
+    if (originalSize > 0.0) {
+        recall = static_cast<double>(intersection) / originalSize;
     }
 
     return std::make_pair(precision, recall);
@@ -37,6 +60,20 @@ static std::pair<double, double> calculatePNR(const T1 &original, const T2 &comp
 
 static double calculateF1Score(double precision, double recall) {
     return 2.0 * (precision * recall) / (precision + recall);
+}
+
+static ClusterMultiset extractClusters(const Graph &g, const std::vector<PSW> &psws) {
+    ClusterMultiset res;
+
+    for (const PSW &psw : psws) {
+        ClusterTable ct(g, psw);
+
+        for (const auto &l : ct.ct) {
+            res[l.first].insert(l.second.begin(), l.second.end());
+        }
+    }
+
+    return res;
 }
 
 // Graph g1 is the original
@@ -61,35 +98,21 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
         std::exit(EXIT_FAILURE);
     }
 
-    // Setup bitmask ids
-    std::unordered_map<std::string, uint64_t> bitmaskId;
+    std::vector<PSW> psws1 = genPSWs(g1);
+    std::vector<PSW> psws2 = genPSWs(g2);
 
-    leaves1.insert(leaves2.begin(), leaves2.end());
+    ClusterMultiset originalDup = extractClusters(g1, psws1);
+    ClusterMultiset compareDup = extractClusters(g2, psws2);
 
-    for (const std::string &l : leaves1) {
-        bitmaskId[l] = bitmaskId.size();
+    ClusterSet originalUniq(originalDup.size());
+    for (const auto &l : originalDup) {
+        originalUniq[l.first].insert(l.second.begin(), l.second.end());
     }
 
-    std::vector<BitmaskSet> c1 = computeClusters(g1, bitmaskId);
-    std::vector<BitmaskSet> c2 = computeClusters(g2, bitmaskId);
-
-    // Merge all the bitmask sets into 1 set
-    // TODO: Find a different way so that we don't have to
-    // merge them later and instead just insert into a set.
-    // Probably modify computeClusters
-    BitmaskMultiset originalDup;
-    BitmaskMultiset compareDup;
-
-    for (const BitmaskSet &bs : c1) {
-        originalDup.insert(bs.begin(), bs.end());
+    ClusterSet compareUniq(compareDup.size());
+    for (const auto &l : compareDup) {
+        compareUniq[l.first].insert(l.second.begin(), l.second.end());
     }
-
-    for (const BitmaskSet &bs : c2) {
-        compareDup.insert(bs.begin(), bs.end());
-    }
-
-    BitmaskSet originalUniq(originalDup.begin(), originalDup.end());
-    BitmaskSet compareUniq(compareDup.begin(), compareDup.end());
 
     std::cout << "Duplicates:" << std::endl;
     std::pair<double, double> pnrDup = calculatePNR(originalDup, compareDup);
