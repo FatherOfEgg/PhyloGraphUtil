@@ -183,6 +183,8 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                 hybrids[tokens[i + 1].value] = curIndex;
             }
 
+            bool addedNode = false;
+
             if (!children.top().empty()) {
                 uint64_t nodeIndex = curIndex;
 
@@ -190,7 +192,16 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                     nodeIndex = hybrids.at(tokens[i + 1].value);
                 }
 
-                g.addNode();
+                if (nodeIndex >= curIndex) {
+                    g.addNode();
+                    addedNode = true;
+                }
+
+                /* std::cout << nodeIndex << std::endl;
+                for (const auto &e : children.top()) {
+                    std::cout << e << ", " << std::endl;
+                } */
+
                 g.adjList[nodeIndex] = std::move(children.top());
                 children.pop();
 
@@ -213,6 +224,9 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                 i++;
             } else {
                 children.top().push_back(curIndex);
+            }
+
+            if (addedNode) {
                 curIndex++;
             }
         } else if (tokens[i].type == TokenType::OPEN_PARENTHESIS) {
