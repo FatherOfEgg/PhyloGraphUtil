@@ -1,6 +1,5 @@
 #include "precisionAndRecall.h"
 
-#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <stack>
@@ -33,27 +32,30 @@ static ClusterMultiset extractClusters(
 
 // COMCLUST
 template <typename CT>
-static double calculateIntersection(
-    const CT &ct,
-    uint64_t maxCount,
-    const Graph &g2, const std::vector<PSW> &psws2,
-    std::unordered_map<std::string, uint64_t> internalLabels
+static std::pair<double, double> calculatePNR(
+    CT originalCT, const Graph &originalG, const std::vector<PSW> &originalPSWs,
+    const std::unordered_map<std::string, uint64_t> &originalInternalLabels,
+    const CT &compareCT, const Graph &compareG, const std::vector<PSW> &comparePSWs,
+    const std::unordered_map<std::string, uint64_t> &compareInternalLabels
 ) {
-    double res = 0.0;
-    std::unordered_map<uint64_t, std::unordered_map<uint64_t, uint64_t>> count;
+    uint64_t truePositives = 0;
+    uint64_t falsePositives = 0;
 
-    std::stack<LRNW> s;
+    for (const PSW &psw : comparePSWs) {
+        std::stack<LRNW> s;
 
-    for (const PSW &psw2 : psws2) {
-        for (size_t i = 0; i < psw2.size(); i++) {
-            const std::pair<uint64_t, uint64_t> p = psw2[i];
+        for (size_t i = 0; i < psw.size(); i++) {
+            const std::pair<uint64_t, uint64_t> p = psw[i];
 
             uint64_t w = p.second;
 
             // If leaf
             if (w == 0) {
-                std::string leafName = g2.leafName.at(p.first);
-                uint64_t encode = internalLabels.at(leafName);
+                std::cout << "1" << std::endl;
+                std::string leafName = compareG.leafName.at(p.first);
+                std::cout << leafName << std::endl;
+                uint64_t encode = originalInternalLabels.at(leafName);
+                std::cout << "2" << std::endl;
 
                 s.push({encode, encode, 1, 1});
             } else {
@@ -74,18 +76,82 @@ static double calculateIntersection(
                 s.push(lrnw);
 
                 if (lrnw.N == lrnw.R - lrnw.L + 1) {
-                    auto itL = ct.find(lrnw.L);
+                    auto itL = originalCT.find(lrnw.L);
 
-                    if (itL == ct.end()) {
+                    if (itL == originalCT.end()) {
+                        falsePositives++;
                         continue;
                     }
 
                     auto itR = itL->second.find(lrnw.R);
 
                     if (itR != itL->second.end()) {
-                        if (count[lrnw.L][lrnw.R] < maxCount) {
-                            count[lrnw.L][lrnw.R]++;
-                            res++;
+                        itL->second.erase(itR);
+                        truePositives++;
+                    } else {
+                        falsePositives++;
+                    }
+
+                    if (itL->second.empty()) {
+                        originalCT.erase(itL);
+                    }
+                }
+            }
+        }
+    }
+
+    for (const auto &l : originalCT) {
+        falsePositives += l.second.size();
+    }
+
+    uint64_t falseNegatives = 0;
+    for (const auto &l : compareCT) {
+        falseNegatives += l.second.size();
+    }
+
+    for (const PSW &psw : originalPSWs) {
+        std::stack<LRNW> s;
+
+        for (size_t i = 0; i < psw.size(); i++) {
+            const std::pair<uint64_t, uint64_t> p = psw[i];
+
+            uint64_t w = p.second;
+
+            // If leaf
+            if (w == 0) {
+                std::string leafName = originalG.leafName.at(p.first);
+                uint64_t encode = compareInternalLabels.at(leafName);
+
+                s.push({encode, encode, 1, 1});
+            } else {
+                LRNW lrnw = {UINT64_MAX, 0, 0, 1};
+
+                do {
+                    LRNW temp = s.top();
+                    s.pop();
+
+                    lrnw.L = std::min(lrnw.L, temp.L);
+                    lrnw.R = std::max(lrnw.R, temp.R);
+                    lrnw.N += temp.N;
+                    lrnw.W += temp.W;
+
+                    w -= temp.W;
+                } while(w != 0);
+
+                s.push(lrnw);
+
+                if (lrnw.N == lrnw.R - lrnw.L + 1) {
+                    auto itL = compareCT.find(lrnw.L);
+
+                    if (itL == compareCT.end()) {
+                        continue;
+                    }
+
+                    auto itR = itL->second.find(lrnw.R);
+
+                    if (itR != itL->second.end()) {
+                        if (falseNegatives > 0) {
+                            falseNegatives--;
                         }
                     }
                 }
@@ -93,34 +159,16 @@ static double calculateIntersection(
         }
     }
 
-    return res;
-}
-
-template <typename T1, typename T2>
-static std::pair<double, double> calculatePNR(
-    const T1 &original, const T2 &compare,
-    double intersection
-) {
-    double originalSize = 0.0;
-    for (const auto &l : original) {
-        originalSize += l.second.size();
-    }
-
-    double compareSize = 0.0;
-    for (const auto &l : compare) {
-        compareSize += l.second.size();
-    }
-
     double precision = 0.0;
-
-    if (compareSize > 0.0) {
-        precision = intersection / compareSize;
+    double predictedPositives = truePositives + falsePositives;
+    if (predictedPositives > 0.0) {
+        precision = static_cast<double>(truePositives) / predictedPositives;
     }
 
     double recall = 0.0;
-
-    if (originalSize > 0.0) {
-        recall = intersection / originalSize;
+    double actualPositives = truePositives + falseNegatives;
+    if (actualPositives > 0.0) {
+        recall = static_cast<double>(truePositives) / actualPositives;
     }
 
     return std::make_pair(precision, recall);
@@ -155,19 +203,20 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
     std::vector<PSW> psws1 = genPSWs(g1);
     std::vector<PSW> psws2 = genPSWs(g2);
 
-    std::unordered_map<std::string, uint64_t> internalLabels;
+    std::unordered_map<std::string, uint64_t> originalInternalLabels;
     {
         ClusterTable ct(g1, psws1[0]);
-        internalLabels = std::move(ct.internalLabels);
+        originalInternalLabels = std::move(ct.internalLabels);
+    }
+
+    std::unordered_map<std::string, uint64_t> compareInternalLabels;
+    {
+        ClusterTable ct(g2, psws2[0]);
+        compareInternalLabels = std::move(ct.internalLabels);
     }
 
     ClusterMultiset originalDup = extractClusters(g1, psws1);
     ClusterMultiset compareDup = extractClusters(g2, psws2);
-
-    uint64_t subtrees1 = std::pow(2, g1.reticulations.size());
-    uint64_t subtrees2 = std::pow(2, g2.reticulations.size());
-    uint64_t maxCount = std::min(subtrees1, subtrees2);
-    double intersectionDup = calculateIntersection(originalDup, maxCount, g2, psws2, internalLabels);
 
     ClusterSet originalUniq(originalDup.size());
     for (const auto &l : originalDup) {
@@ -179,10 +228,14 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
         compareUniq[l.first].insert(l.second.begin(), l.second.end());
     }
 
-    double intersectionUniq = calculateIntersection(originalUniq, 1, g2, psws2, internalLabels);
+    std::cout << "Duplicates (Every contained subtrees' clusters are considered):" << std::endl;
+    std::pair<double, double> pnrDup = calculatePNR(
+        originalDup, g1, psws1,
+        originalInternalLabels,
+        compareDup, g2, psws2,
+        compareInternalLabels
+    );
 
-    std::cout << "Duplicates:" << std::endl;
-    std::pair<double, double> pnrDup = calculatePNR(originalDup, compareDup, intersectionDup);
     double f1scoreDup = calculateF1Score(pnrDup.first, pnrDup.second);
 
     std::cout << "Precision: " << pnrDup.first << std::endl;
@@ -191,8 +244,13 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
 
     std::cout << std::endl;
 
-    std::cout << "Unique:" << std::endl;
-    std::pair<double, double> pnrUniq = calculatePNR(originalUniq, compareUniq, intersectionUniq);
+    std::cout << "Unique (Unique clusters from the combined contained subtrees):" << std::endl;
+    std::pair<double, double> pnrUniq = calculatePNR(
+        originalUniq, g1, psws1,
+        originalInternalLabels,
+        compareUniq, g2, psws2,
+        compareInternalLabels
+    );
     double f1scoreUniq = calculateF1Score(pnrUniq.first, pnrUniq.second);
 
     std::cout << "Precision: " << pnrUniq.first << std::endl;
