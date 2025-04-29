@@ -51,11 +51,8 @@ static std::pair<double, double> calculatePNR(
 
             // If leaf
             if (w == 0) {
-                std::cout << "1" << std::endl;
                 std::string leafName = compareG.leafName.at(p.first);
-                std::cout << leafName << std::endl;
                 uint64_t encode = originalInternalLabels.at(leafName);
-                std::cout << "2" << std::endl;
 
                 s.push({encode, encode, 1, 1});
             } else {
@@ -228,7 +225,7 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
         compareUniq[l.first].insert(l.second.begin(), l.second.end());
     }
 
-    std::cout << "Duplicates (Every contained subtrees' clusters are considered):" << std::endl;
+    std::cout << "Duplicates clusters:" << std::endl;
     std::pair<double, double> pnrDup = calculatePNR(
         originalDup, g1, psws1,
         originalInternalLabels,
@@ -244,7 +241,7 @@ void precisionAndRecall(const Graph &g1, const Graph &g2) {
 
     std::cout << std::endl;
 
-    std::cout << "Unique (Unique clusters from the combined contained subtrees):" << std::endl;
+    std::cout << "Unique clusters:" << std::endl;
     std::pair<double, double> pnrUniq = calculatePNR(
         originalUniq, g1, psws1,
         originalInternalLabels,

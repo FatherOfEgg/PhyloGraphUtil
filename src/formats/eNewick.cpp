@@ -197,11 +197,6 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
                     addedNode = true;
                 }
 
-                /* std::cout << nodeIndex << std::endl;
-                for (const auto &e : children.top()) {
-                    std::cout << e << ", " << std::endl;
-                } */
-
                 g.adjList[nodeIndex] = std::move(children.top());
                 children.pop();
 
