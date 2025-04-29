@@ -6,7 +6,7 @@
 #include <string>
 
 #include "../formats/format.h"
-#include "compare/jaccardIndex.h"
+// #include "compare/jaccardIndex.h"
 #include "compare/precisionAndRecall.h"
 #include "compare/robinsonFoulds.h"
 
@@ -19,7 +19,7 @@ struct CompareMethod {
 
 static CompareMethod compareMethods[] = {
     {"rf", robinsonFoulds},
-    {"ji", jaccardIndex},
+    // {"ji", jaccardIndex},
     {"pr", precisionAndRecall},
 };
 
@@ -35,7 +35,7 @@ static void compareUsage() {
     std::cout << std::endl;
     std::cout << "METHOD:" << std::endl;
     std::cout << "\trf\tRobinson Foulds." << std::endl;
-    std::cout << "\tji\tJaccard index." << std::endl;
+    // std::cout << "\tji\tJaccard index." << std::endl;
     std::cout << "\tpr\tPrecision & Recall. (INPUT1 is original, INPUT2 will be compared to INPUT1" << std::endl;
     std::cout << std::endl;
     printFormats();
