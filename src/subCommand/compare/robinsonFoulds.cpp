@@ -1,37 +1,78 @@
 #include "robinsonFoulds.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
-#include <limits>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-#include "util/bitmask.h"
-#include "util/cluster.h"
+#include "util/clusterTable.h"
 #include "util/lap.h"
+#include "util/psw.h"
 
-using BitmaskSet = std::unordered_set<Bitmask, BitmaskHash>;
-
+// COMCLUST
 static uint64_t rfDist(
-    BitmaskSet clusters1,
-    BitmaskSet clusters2
+    const ClusterTable &ct,
+    const Graph &g2, const PSW &psw2
 ) {
     uint64_t commonClusters = 0;
 
-    for (const Bitmask &c1 : clusters1) {
-        if (clusters2.find(c1) != clusters2.end()) {
-            commonClusters++;
+    std::stack<LRNW> s;
+
+    for (size_t i = 0; i < psw2.size(); i++) {
+        const std::pair<uint64_t, uint64_t> p = psw2[i];
+
+        uint64_t w = p.second;
+
+        // If leaf
+        if (w == 0) {
+            std::string leafName = g2.leafName.at(p.first);
+            uint64_t encode = ct.encode(leafName);
+
+            s.push({encode, encode, 1, 1});
+        } else {
+            LRNW lrnw = {UINT64_MAX, 0, 0, 1};
+
+            do {
+                LRNW temp = s.top();
+                s.pop();
+
+                lrnw.L = std::min(lrnw.L, temp.L);
+                lrnw.R = std::max(lrnw.R, temp.R);
+                lrnw.N += temp.N;
+                lrnw.W += temp.W;
+
+                w -= temp.W;
+            } while(w != 0);
+
+            s.push(lrnw);
+
+            if (lrnw.N == lrnw.R - lrnw.L + 1
+            && ct.isClust(lrnw.L, lrnw.R)) {
+                commonClusters++;
+            }
         }
     }
 
-    // std::cout << "similarity: " << commonClusters << std::endl;
-    // std::cout << "diff: " << clusters1.size() + clusters2.size() - 2 * commonClusters << std::endl;
+    uint64_t size1 = 0;
+    for (const auto &l : ct.ct) {
+        size1 += l.second.size();
+    }
 
-    return clusters1.size() + clusters2.size() - 2 * commonClusters;
+    ClusterTable ct2(g2, psw2);
+    uint64_t size2 = 0;
+    for (const auto &l : ct2.ct) {
+        size2 += l.second.size();
+    }
+
+
+    return (size1 + size2 - 2 * commonClusters) / 2;
 }
 
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
@@ -55,77 +96,61 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
         std::exit(EXIT_FAILURE);
     }
 
-    // Setup bitmask ids
-    std::unordered_map<std::string, uint64_t> bitmaskId;
-
-    leaves1.insert(leaves2.begin(), leaves2.end());
-
-    for (const std::string &l : leaves1) {
-        bitmaskId[l] = bitmaskId.size();
-    }
-
     /* if (g1.reticulations.size() != g2.reticulations.size()) {
         std::cerr << "Trees do not have the same number of reticulations." << std::endl;
         std::exit(EXIT_FAILURE);
     } */
 
-    std::vector<BitmaskSet> c1 = computeClusters(g1, bitmaskId);
-    std::vector<BitmaskSet> c2 = computeClusters(g2, bitmaskId);
+    std::vector<PSW> psws1 = genPSWs(g1);
+    std::vector<PSW> psws2 = genPSWs(g2);
 
-    size_t n = c1.size();
-    size_t m = c2.size();
+    size_t n = psws1.size();
+    size_t m = psws2.size();
     size_t size = std::max(n, m);
 
-    std::vector<std::vector<double>> costMatrix(size, std::vector<double>(size, 0.0));
+    std::vector<std::vector<cost>> costMatrix(size, std::vector<cost>(size, 0.0));
 
-    uint64_t minDist = std::numeric_limits<uint64_t>::max();
+    uint64_t sumMinDist = 0;
     for (size_t i = 0; i < n; i++) {
-        for (size_t j = 0; j < m; j++) {
-            uint64_t dist = rfDist(c1[i], c2[j]);
-            
-            // If we find a perfect match
-            if (dist == 0) {
-                std::cout << "0% different (smallest RF dist: 0)" << std::endl;
-                return;
-            }
+        uint64_t minDist = UINT64_MAX;
+        ClusterTable ct(g1, psws1[i]);
 
-            costMatrix[i][j] = static_cast<double>(dist);
+        for (size_t j = 0; j < m; j++) {
+            uint64_t dist = rfDist(ct, g2, psws2[j]);
+
+            costMatrix[i][j] = static_cast<cost>(dist);
 
             if (dist < minDist) {
                 minDist = dist;
             }
         }
+
+        sumMinDist += minDist;
     }
 
-    // Pad with double::max if the matrix is not square
-    double doubleMax = std::numeric_limits<double>::max();
-    for (size_t i = n; i < size; i++) {
-        std::fill(costMatrix[i].begin(), costMatrix[i].end(), doubleMax);
-    }
-    for (size_t i = 0; i < n; i++) {
-        std::fill(costMatrix[i].begin() + m, costMatrix[i].end(), doubleMax);
-    }
+    std::vector<col> rowSol(size);
+    std::vector<row> colSol(size);
+    std::vector<cost> u(size);
+    std::vector<cost> v(size);
 
-    std::vector<int> rowsol(size);
-    std::vector<int> colsol(size);
-    std::vector<double> u(size);
-    std::vector<double> v(size);
+    cost c = lap(size, costMatrix, rowSol, colSol, u, v);
 
-    lap(size, costMatrix, rowsol, colsol, u, v);
+    size_t numLeaves = g1.leaves.size();
+    double maxRFDist = (2 * (numLeaves - 2)) * size;
 
-    for (size_t i = 0; i < n; i++) {
-        // Check if it's a valid assignment
-        if (rowsol[i] < static_cast<int>(m)) {
-            uint64_t dist = static_cast<uint64_t>(costMatrix[i][rowsol[i]]);
-            minDist = std::min(minDist, dist);
-        }
-    }
+    std::cout << "Bipartite matching:" << std::endl;
+    std::cout << c / maxRFDist * 100.0 << "% difference " << std::endl;
+    std::cout << "Total RF dist: " << c << std::endl;
 
-    size_t leaves = g1.leaves.size();
-    double maxRFDist = 2 * (leaves - 2);
-    double percentage = (static_cast<double>(minDist) / maxRFDist) * 100;
+    std::cout << std::endl;
 
-    std::cout << percentage << "% difference between the two graphs" << std::endl;
-    std::cout << "Sum of smallest RF distances between trees: " << minDist << std::endl;
-    std::cout << "Sum of total number of non-trivial splits: " << maxRFDist << std::endl;
+    std::cout << "Sum of the smallest RF distances:" << std::endl;
+    std::cout << (static_cast<double>(sumMinDist) / maxRFDist) * 100.0 << "% difference" << std::endl;
+    std::cout << "Total RF dist: " << sumMinDist << std::endl;
+
+    std::cout << std::endl;
+
+    std::cout << "Non-trivial splits:" << std::endl;
+    std::cout << "W/o considering every contained subtree: " << maxRFDist / size << std::endl;
+    std::cout << "Considering every contained subtree: " << maxRFDist << std::endl;
 }
