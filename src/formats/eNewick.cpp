@@ -17,6 +17,7 @@
 enum class TokenType {
     OPEN_PARENTHESIS,
     CLOSE_PARENTHESIS,
+    COMMA,
     SEMI_COLON,
     LENGTH,
     INTERNAL_NAME,
@@ -69,13 +70,7 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             std::string hybrid_id;
 
             int n = f.peek();
-
-            if (n == 'H') {
-                f.get(c);
-            }
-
-            n = f.peek();
-            while (n != EOF && isdigit(n)) {
+            while (n != EOF && (isalpha(n) || isdigit(n))) {
                 f.get(c);
                 hybrid_id += c;
                 n = f.peek();
@@ -96,6 +91,8 @@ static std::vector<Token> tokenize(std::ifstream &f) {
             if (n != EOF && (!isalpha(n) && !isdigit(n))) {
                 tokens.push_back({TokenType::INTERNAL_NAME, ""});
             }
+        } else if (c == ',') {
+            tokens.push_back({TokenType::COMMA, ","});
         } else if (c == ';') {
             tokens.push_back({TokenType::SEMI_COLON, ";"});
 
