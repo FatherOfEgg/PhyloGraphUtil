@@ -12,7 +12,7 @@ ClusterTable::ClusterTable(const Graph &g, const PSW &psw) {
 
     uint64_t rightLeaf = 0;
 
-    for (size_t i = 0; i < psw.size(); i++) {
+    for (size_t i = 0; i < psw.size() - 1; i++) {
         const std::pair<uint64_t, uint64_t> p = psw[i];
 
         // If leaf
