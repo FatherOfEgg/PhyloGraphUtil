@@ -1,6 +1,7 @@
 #include "clusterTable.h"
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -44,4 +45,12 @@ bool ClusterTable::isClust(uint64_t L, uint64_t R) const {
     }
 
     return itL->second.find(R) != itL->second.end();
+}
+
+void ClusterTable::print() const {
+    for (const auto &l : ct) {
+        for (const auto &r : l.second) {
+            std::cout << l.first << ", " << r << std::endl;
+        }
+    }
 }

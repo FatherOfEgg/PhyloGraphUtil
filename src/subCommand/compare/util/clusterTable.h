@@ -21,6 +21,8 @@ public:
 
     bool isClust(uint64_t L, uint64_t R) const;
 
+    void print() const;
+
 public:
     std::unordered_map<uint64_t, std::unordered_set<uint64_t>> ct;
     std::unordered_map<std::string, uint64_t> internalLabels;
