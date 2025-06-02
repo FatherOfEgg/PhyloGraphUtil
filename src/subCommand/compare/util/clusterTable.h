@@ -26,4 +26,5 @@ public:
 public:
     std::unordered_map<uint64_t, std::unordered_set<uint64_t>> ct;
     std::unordered_map<std::string, uint64_t> internalLabels;
+    size_t size;
 };

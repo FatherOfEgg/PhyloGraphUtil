@@ -7,6 +7,8 @@
 #include <unordered_set>
 
 ClusterTable::ClusterTable(const Graph &g, const PSW &psw) {
+    size = 0;
+
     uint64_t leafCode = 0;
     internalLabels.reserve(g.leafName.size());
 
@@ -28,6 +30,7 @@ ClusterTable::ClusterTable(const Graph &g, const PSW &psw) {
             uint64_t leftLeaf = internalLabels[leafName];
 
             ct[leftLeaf].insert(rightLeaf);
+            size++;
         }
     }
 
