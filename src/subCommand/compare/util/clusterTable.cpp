@@ -29,11 +29,11 @@ ClusterTable::ClusterTable(const Graph &g, const PSW &psw) {
             std::string leafName = g.leafName.at(leftLeafIndex);
             uint64_t leftLeaf = internalLabels[leafName];
 
-            ct[leftLeaf].insert(rightLeaf);
-            size++;
+            if (ct[leftLeaf].insert(rightLeaf).second) {
+                size++;
+            }
         }
     }
-
 }
 
 uint64_t ClusterTable::encode(const std::string &l) const {
