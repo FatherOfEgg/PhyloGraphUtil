@@ -37,16 +37,16 @@ static std::vector<Token> tokenize(std::ifstream &f) {
     while (f.get(c)) {
         if (c == ':') {
             f.get(c);
-            std::string length = {c};
+            // std::string length = {c};
 
             int n = f.peek();
             while (n != EOF && (isdigit(n) || n == '.')) {
                 f.get(c);
-                length += c;
+                // length += c;
                 n = f.peek();
             }
 
-            tokens.push_back({TokenType::LENGTH, length});
+            // tokens.push_back({TokenType::LENGTH, length});
         } else if (isalpha(c) || isdigit(c)) {
             std::string name = {c};
 
