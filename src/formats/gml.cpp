@@ -192,6 +192,44 @@ static bool parse(Graph &g, const std::vector<Token> &tokens) {
 
     for (const uint64_t &r : reticulations) {
         g.reticulations[r] = nodeParents[r];
+
+        // If a reticulation only has an edge to a leaf,
+        // turn said reticulation into that leaf and remove
+        // the unnecessary edge.
+        if (g.adjList[r].size() == 1) {
+            u_int64_t c = g.adjList[r][0];
+
+            if (g.adjList[c].empty()) {
+                labels[r] = labels[c];
+                labels.erase(c);
+
+                g.adjList[r].pop_back();
+
+                for (std::vector<u_int64_t> &n : g.adjList) {
+                    for (u_int64_t &e : n) {
+                        if (e > c) {
+                            e--;
+                        }
+                    }
+                }
+
+                g.adjList.erase(g.adjList.begin() + c);
+
+                std::unordered_map<uint64_t, std::string> temp;
+
+                for (const auto &p : labels) {
+                    u_int64_t key = p.first;
+
+                    if (p.first > c) {
+                        key--;
+                    }
+
+                    temp[key] = p.second;
+                }
+
+                labels = std::move(temp);
+            }
+        }
     }
 
     for (size_t i = 0; i < g.adjList.size(); i++) {
