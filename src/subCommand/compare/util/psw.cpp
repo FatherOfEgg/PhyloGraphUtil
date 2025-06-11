@@ -9,7 +9,7 @@
 // Post order sequence with weights (PSW)
 static PSW genPSWHelper(
     const Graph &g,
-    const std::vector<std::vector<uint64_t>> adjList
+    const std::vector<std::vector<uint64_t>> &adjList
 ) {
     PSW res;
 
@@ -21,7 +21,7 @@ static PSW genPSWHelper(
         if (leafIt == g.leafName.end()) {
             uint64_t childrenWeight = 0;
 
-            for (const uint64_t &c : g.adjList[node]) {
+            for (const uint64_t &c : adjList[node]) {
                 childrenWeight += postOrder(c);
             }
 
