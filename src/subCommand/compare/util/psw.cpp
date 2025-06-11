@@ -1,13 +1,15 @@
 #include "psw.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <unordered_map>
 #include <vector>
 
 // Post order sequence with weights (PSW)
 static PSW genPSWHelper(
     const Graph &g,
-    const std::unordered_map<uint64_t, uint8_t> &curEdges
+    const std::vector<std::vector<uint64_t>> adjList
 ) {
     PSW res;
 
@@ -18,42 +20,12 @@ static PSW genPSWHelper(
 
         if (leafIt == g.leafName.end()) {
             uint64_t childrenWeight = 0;
-            bool ignoreNode = false;
 
             for (const uint64_t &c : g.adjList[node]) {
-                auto it = g.reticulations.find(c);
-
-                // Check if the current node has an edge
-                // to a reticulation at child c
-                if (it != g.reticulations.end()) {
-                    // Child c is a reticulation, so get its parents
-                    const std::vector<uint64_t> &parents = it->second;
-                    uint8_t curEdge = curEdges.at(c);
-
-                    // Continue if there's "no" edge from reticulation's parent
-                    // to the reticulation c
-                    if (parents[curEdge] != node) {
-                        ignoreNode = true;
-                        continue;
-                    }
-                }
-
                 childrenWeight += postOrder(c);
             }
 
-            if (ignoreNode) {
-                // If this node has an edge to a reticulation,
-                // but currently doesn't "have" a connection to it currently,
-                // then we ignore this node and don't consider it in the PSW.
-                //
-                // For example, if we have: ((1, (2)#H1), (#H1, 3)),
-                // and we extract a subtree from it, it would be:
-                // ((1, 2), (3)). However, we don't want it as "(3)",
-                // instead we want the subree to be: ((1, 2), 3)
-                return childrenWeight;
-            } else {
-                weight += childrenWeight;
-            }
+            weight += childrenWeight;
         }
 
         res.push_back(std::make_pair(node, weight));
@@ -65,28 +37,114 @@ static PSW genPSWHelper(
     return res;
 }
 
+// Select an edge to use for a reticulation,
+// as in, 2 edges go into a node (reticulation),
+// and only want to consider one of the edges, not both.
+// Also removes unnecessary nodes after choosing an edge,
+// for example, A->B->C->D, becomes A->D.
+static void pruneGraph(
+    std::vector<std::vector<uint64_t>> &adjList,
+    const std::unordered_map<uint64_t, std::vector<uint64_t>> &parents,
+    const std::unordered_map<uint64_t, std::vector<uint64_t>::const_iterator> &curEdges
+) {
+    for (const auto &p : curEdges) {
+        uint64_t curParent = *p.second;
+
+        auto it = std::find(adjList[curParent].begin(), adjList[curParent].end(), p.first);
+        adjList[curParent].erase(it);
+    }
+
+    std::unordered_set<uint64_t> completed;
+
+    for (const auto &p : curEdges) {
+        uint64_t curNode = *p.second;
+        uint64_t targetNode;
+
+        switch (adjList[curNode].size()) {
+            case 0:
+                targetNode = curNode;
+                break;
+            case 1:
+                targetNode = adjList[curNode][0];
+                break;
+            default:
+                continue;
+        }
+
+        uint64_t prevNode;
+
+        do {
+            prevNode = curNode;
+            std::vector<uint64_t> parent = parents.at(curNode);
+
+            if (parent.size() == 2) {
+                for (const uint64_t &e : parent) {
+                    if (e != *p.second) {
+                        curNode = e;
+                        break;
+                    }
+                }
+            } else {
+                curNode = parent[0];
+            }
+            /* if (parents.at(curNode).size() >= 3) {
+                continue;
+            } */
+
+        } while (adjList[curNode].size() == 1);
+
+        auto it = std::find(adjList[curNode].begin(), adjList[curNode].end(), prevNode);
+        *it = targetNode;
+    }
+}
+
+static std::unordered_map<uint64_t, std::vector<uint64_t>> getParents(
+    const Graph &g
+) {
+    std::unordered_map<uint64_t, std::vector<uint64_t>> res;
+    res.reserve(g.adjList.size());
+
+    std::function<void(uint64_t)> postOrder = [&](uint64_t curParent) -> void {
+        for (const uint64_t &c : g.adjList[curParent]) {
+            res[c].push_back(curParent);
+            postOrder(c);
+        }
+    };
+
+    postOrder(g.root);
+
+    return res;
+}
+
 std::vector<PSW> genPSWs(
     const Graph &g
 ) {
+    std::vector<std::vector<uint64_t>> copy = g.adjList;
     std::vector<PSW> psw;
 
-    std::unordered_map<uint64_t, uint8_t> curEdges;
+    std::unordered_map<uint64_t, std::vector<uint64_t>::const_iterator> curEdges;
     curEdges.reserve(g.reticulations.size());
 
     for (const auto &p : g.reticulations) {
-        curEdges[p.first] = 0;
+        curEdges[p.first] = p.second.begin();
     }
 
+    std::vector<uint64_t>::iterator it;
+
+    std::unordered_map<uint64_t, std::vector<uint64_t>> parents = getParents(g);
+
     while (true) {
-        psw.emplace_back(genPSWHelper(g, curEdges));
+        pruneGraph(copy, parents, curEdges);
+
+        psw.emplace_back(genPSWHelper(g, copy));
 
         auto it = curEdges.begin();
         while (it != curEdges.end()) {
-            if (it->second < g.reticulations.at(it->first).size() - 1) {
+            if (it->second != g.reticulations.at(it->first).end()) {
                 it->second++;
                 break;
             } else {
-                it->second = 0;
+                it->second = g.reticulations.at(it->first).begin();
             }
 
             it++;
@@ -95,6 +153,8 @@ std::vector<PSW> genPSWs(
         if (it == curEdges.end()) {
             break;
         }
+
+        std::copy(g.adjList.begin(), g.adjList.end(), copy.begin());
     }
 
     return psw;
