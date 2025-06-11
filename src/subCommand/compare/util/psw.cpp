@@ -43,12 +43,13 @@ static PSW genPSWHelper(
 // as in, 2 edges go into a node (reticulation),
 // and only want to consider one of the edges, not both.
 // Also removes unnecessary nodes after choosing an edge,
-// for example, A->B->C->D, becomes A->D.
+// for example, A->B->C->D becomes A->D.
 static void pruneGraph(
     std::vector<std::vector<uint64_t>> &adjList,
     const std::unordered_map<uint64_t, std::unordered_set<uint64_t>> &parents,
     const std::unordered_map<uint64_t, std::vector<uint64_t>::const_iterator> &curEdges
 ) {
+    // Delete the edge between the reticulation and one of its parents
     for (const auto &p : curEdges) {
         uint64_t curParent = *p.second;
 
@@ -59,18 +60,36 @@ static void pruneGraph(
     for (const auto &p : curEdges) {
         uint64_t curNode = *p.second;
         uint64_t targetNode;
+        bool foundTargetNode = false;
 
-        switch (adjList[curNode].size()) {
-            case 0:
-                targetNode = curNode;
-                break;
-            case 1:
+        while (!foundTargetNode) {
+            size_t s = adjList[curNode].size();
+
+            if (s == 1) {
                 targetNode = adjList[curNode][0];
+                foundTargetNode = true;
+            } else if (s == 0) {
+                std::unordered_set<uint64_t> parent = parents.at(curNode);
+
+                for (const uint64_t &e : parent) {
+                    if (e != *p.second) {
+                        curNode = e;
+                        break;
+                    }
+                }
+
+                auto it = std::find(adjList[curNode].begin(), adjList[curNode].end(), *p.second);
+                adjList[curNode].erase(it);
+            } else {
                 break;
-            default:
-                continue;
+            }
         }
 
+        if (!foundTargetNode) {
+            continue;
+        }
+
+        // Reduce the edge/node: A->B->C->D becomes A->D
         uint64_t prevNode;
 
         do {
