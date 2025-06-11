@@ -5,6 +5,7 @@
 #include <functional>
 #include <iterator>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 // Post order sequence with weights (PSW)
@@ -45,7 +46,7 @@ static PSW genPSWHelper(
 // for example, A->B->C->D, becomes A->D.
 static void pruneGraph(
     std::vector<std::vector<uint64_t>> &adjList,
-    const std::unordered_map<uint64_t, std::vector<uint64_t>> &parents,
+    const std::unordered_map<uint64_t, std::unordered_set<uint64_t>> &parents,
     const std::unordered_map<uint64_t, std::vector<uint64_t>::const_iterator> &curEdges
 ) {
     for (const auto &p : curEdges) {
@@ -74,7 +75,7 @@ static void pruneGraph(
 
         do {
             prevNode = curNode;
-            std::vector<uint64_t> parent = parents.at(curNode);
+            std::unordered_set<uint64_t> parent = parents.at(curNode);
 
             if (parent.size() == 2) {
                 for (const uint64_t &e : parent) {
@@ -84,7 +85,7 @@ static void pruneGraph(
                     }
                 }
             } else {
-                curNode = parent[0];
+                curNode = *parent.begin();
             }
             /* if (parents.at(curNode).size() >= 3) {
                 continue;
@@ -97,15 +98,15 @@ static void pruneGraph(
     }
 }
 
-static std::unordered_map<uint64_t, std::vector<uint64_t>> getParents(
+static std::unordered_map<uint64_t, std::unordered_set<uint64_t>> getParents(
     const Graph &g
 ) {
-    std::unordered_map<uint64_t, std::vector<uint64_t>> res;
+    std::unordered_map<uint64_t, std::unordered_set<uint64_t>> res;
     res.reserve(g.adjList.size());
 
     std::function<void(uint64_t)> postOrder = [&](uint64_t curParent) -> void {
         for (const uint64_t &c : g.adjList[curParent]) {
-            res[c].push_back(curParent);
+            res[c].insert(curParent);
             postOrder(c);
         }
     };
@@ -130,7 +131,7 @@ std::vector<PSW> genPSWs(
 
     std::vector<uint64_t>::iterator it;
 
-    std::unordered_map<uint64_t, std::vector<uint64_t>> parents = getParents(g);
+    std::unordered_map<uint64_t, std::unordered_set<uint64_t>> parents = getParents(g);
 
     while (true) {
         pruneGraph(copy, parents, curEdges);
