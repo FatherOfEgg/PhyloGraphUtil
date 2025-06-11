@@ -54,8 +54,6 @@ static void pruneGraph(
         adjList[curParent].erase(it);
     }
 
-    std::unordered_set<uint64_t> completed;
-
     for (const auto &p : curEdges) {
         uint64_t curNode = *p.second;
         uint64_t targetNode;
