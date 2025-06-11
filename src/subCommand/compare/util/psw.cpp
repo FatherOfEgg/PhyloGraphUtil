@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <iterator>
 #include <unordered_map>
 #include <vector>
 
@@ -138,7 +139,7 @@ std::vector<PSW> genPSWs(
 
         auto it = curEdges.begin();
         while (it != curEdges.end()) {
-            if (it->second != g.reticulations.at(it->first).end()) {
+            if (std::next(it->second) != g.reticulations.at(it->first).end()) {
                 it->second++;
                 break;
             } else {
