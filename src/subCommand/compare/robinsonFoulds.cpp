@@ -16,6 +16,35 @@
 #include "util/lap.h"
 #include "util/psw.h"
 
+static void printNonTrivialClusters(
+    const Graph &g,
+    std::vector<ClusterTable> cts
+) {
+    uint64_t minCluster = cts[0].size;
+    double sumCluster = cts[0].size;
+    uint64_t maxCluster = cts[0].size;
+
+    for (size_t i = 1; i < cts.size(); i++) {
+        uint64_t s = cts[i].size;
+
+        if (s < minCluster) {
+            minCluster = s;
+        }
+        if (s > maxCluster) {
+            maxCluster = s;
+        }
+        sumCluster += s;
+    }
+
+    std::cout << g.filename << ":" << std::endl;
+
+    std::cout << "min: " << minCluster;
+    std::cout << ", max: " << maxCluster;
+    std::cout << ", avg: " << sumCluster / cts.size() << std::endl;
+
+    std::cout << "Considering every contained subtree: " << sumCluster << std::endl;
+}
+
 // COMCLUST
 // Returns a pair (dissimilarity, similarity)
 static std::pair<uint64_t, uint64_t> rfDist(
@@ -150,19 +179,20 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     size_t numLeaves = g1.leaves.size();
     double maxRFDist = (2 * (numLeaves - 2)) * size;
 
-    std::cout << "Bipartite matching:" << std::endl;
+    std::cout << "===Bipartite matching===" << std::endl;
     std::cout << c / maxRFDist * 100.0 << "% difference " << std::endl;
     std::cout << "Total RF dist: " << c << std::endl;
 
     std::cout << std::endl;
 
-    std::cout << "Sum of the smallest RF distances:" << std::endl;
+    std::cout << "===Sum of the smallest RF distances===" << std::endl;
     std::cout << (static_cast<double>(sumMinDist) / maxRFDist) * 100.0 << "% difference" << std::endl;
     std::cout << "Total RF dist: " << sumMinDist << std::endl;
 
     std::cout << std::endl;
 
-    std::cout << "Non-trivial splits:" << std::endl;
-    std::cout << "W/o considering every contained subtree: " << maxRFDist / size << std::endl;
-    std::cout << "Considering every contained subtree: " << maxRFDist << std::endl;
+    std::cout << "===Non-trivial clades/clusters===" << std::endl;
+    printNonTrivialClusters(g1, cts1);
+    std::cout << std::endl;
+    printNonTrivialClusters(g2, cts2);
 }
