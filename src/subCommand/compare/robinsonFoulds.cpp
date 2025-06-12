@@ -17,7 +17,8 @@
 #include "util/psw.h"
 
 // COMCLUST
-static uint64_t rfDist(
+// Returns a pair (dissimilarity, similarity)
+static std::pair<uint64_t, uint64_t> rfDist(
     const ClusterTable &ct1,
     const ClusterTable &ct2,
     const Graph &g2, const PSW &psw2
@@ -61,7 +62,8 @@ static uint64_t rfDist(
         }
     }
 
-    return (ct1.size + ct2.size - 2 * commonClusters);
+    uint64_t dissimilarity = ct1.size + ct2.size - 2 * commonClusters;
+    return std::make_pair(dissimilarity, commonClusters);
 }
 
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
@@ -117,7 +119,8 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
         uint64_t minDist = UINT64_MAX;
 
         for (size_t j = 0; j < m; j++) {
-            uint64_t dist = rfDist(cts1[i], cts2[j], g2, psws2[j]);
+            auto p = rfDist(cts1[i], cts2[j], g2, psws2[j]);
+            uint64_t dist = p.first;
 
             costMatrix[i][j] = static_cast<cost>(dist);
 
