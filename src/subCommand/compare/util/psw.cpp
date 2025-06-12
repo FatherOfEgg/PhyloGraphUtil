@@ -71,11 +71,17 @@ static void pruneGraph(
             } else if (s == 0) {
                 std::unordered_set<uint64_t> parent = parents.at(curNode);
 
-                for (const uint64_t &e : parent) {
-                    if (e != *p.second) {
-                        curNode = e;
-                        break;
+                if (parent.size() == 2) {
+                    uint64_t ignoreNode = *curEdges.at(curNode);
+
+                    for (const uint64_t &e : parent) {
+                        if (e != ignoreNode) {
+                            curNode = e;
+                            break;
+                        }
                     }
+                } else {
+                    curNode = *parent.begin();
                 }
 
                 auto it = std::find(adjList[curNode].begin(), adjList[curNode].end(), *p.second);
@@ -97,8 +103,10 @@ static void pruneGraph(
             std::unordered_set<uint64_t> parent = parents.at(curNode);
 
             if (parent.size() == 2) {
+                uint64_t ignoreNode = *curEdges.at(curNode);
+
                 for (const uint64_t &e : parent) {
-                    if (e != *p.second) {
+                    if (e != ignoreNode) {
                         curNode = e;
                         break;
                     }
