@@ -30,4 +30,5 @@ public:
     std::unordered_map<uint64_t, std::vector<uint64_t>> reticulations;
 
     FormatType format;
+    std::string filename;
 };

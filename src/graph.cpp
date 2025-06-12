@@ -81,6 +81,7 @@ static std::string getExtension(const std::string &filename) {
 
 void Graph::open(const std::string &file) {
     std::string ext = getExtension(file);
+    filename = file;
 
     // Go through each format and their expected extension name(s).
     for (const Format &f : formats) {
