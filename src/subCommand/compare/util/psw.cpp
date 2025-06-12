@@ -57,8 +57,19 @@ static void pruneGraph(
         adjList[curParent].erase(it);
     }
 
+    std::unordered_set<uint64_t> completed;
+
+    // Fix/reduce the node that the reticulations 
+    // disconnected from.
     for (const auto &p : curEdges) {
         uint64_t curNode = *p.second;
+
+        if (completed.find(curNode) != completed.end()) {
+            // If 2 or more reticulations removed their edge
+            // from the same node.
+            continue;
+        }
+
         uint64_t targetNode;
         bool foundTargetNode = false;
 
@@ -122,6 +133,9 @@ static void pruneGraph(
 
         auto it = std::find(adjList[curNode].begin(), adjList[curNode].end(), prevNode);
         *it = targetNode;
+
+        completed.insert(*p.second);
+    }
     }
 }
 
