@@ -77,7 +77,11 @@ static void pruneGraph(
             size_t s = adjList[curNode].size();
 
             if (s == 1) {
-                targetNode = adjList[curNode][0];
+                do {
+                    curNode = adjList[curNode][0];
+                } while (adjList[curNode].size() == 1);
+
+                targetNode = curNode;
                 foundTargetNode = true;
             } else if (s == 0) {
                 std::unordered_set<uint64_t> parent = parents.at(curNode);
