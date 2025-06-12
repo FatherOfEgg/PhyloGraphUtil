@@ -16,7 +16,7 @@
 #include "util/lap.h"
 #include "util/psw.h"
 
-static void printNonTrivialClusters(
+static void printClusterStats(
     const Graph &g,
     std::vector<ClusterTable> cts
 ) {
@@ -192,7 +192,7 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     std::cout << std::endl;
 
     std::cout << "===Non-trivial clades/clusters===" << std::endl;
-    printNonTrivialClusters(g1, cts1);
+    printClusterStats(g1, cts1);
     std::cout << std::endl;
-    printNonTrivialClusters(g2, cts2);
+    printClusterStats(g2, cts2);
 }
