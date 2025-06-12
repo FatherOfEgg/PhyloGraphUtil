@@ -18,7 +18,8 @@
 
 // COMCLUST
 static uint64_t rfDist(
-    const ClusterTable &ct,
+    const ClusterTable &ct1,
+    const ClusterTable &ct2,
     const Graph &g2, const PSW &psw2
 ) {
     uint64_t commonClusters = 0;
@@ -33,7 +34,7 @@ static uint64_t rfDist(
         // If leaf
         if (w == 0) {
             std::string leafName = g2.leafName.at(p.first);
-            uint64_t encode = ct.encode(leafName);
+            uint64_t encode = ct1.encode(leafName);
 
             s.push({encode, encode, 1, 1});
         } else {
@@ -54,15 +55,13 @@ static uint64_t rfDist(
             s.push(lrnw);
 
             if (lrnw.N == lrnw.R - lrnw.L + 1
-            && ct.isClust(lrnw.L, lrnw.R)) {
+            && ct1.isClust(lrnw.L, lrnw.R)) {
                 commonClusters++;
             }
         }
     }
 
-    ClusterTable ct2(g2, psw2);
-
-    return (ct.size + ct2.size - 2 * commonClusters);
+    return (ct1.size + ct2.size - 2 * commonClusters);
 }
 
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
@@ -98,15 +97,27 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     size_t m = psws2.size();
     size_t size = std::max(n, m);
 
+    std::vector<ClusterTable> cts1;
+    cts1.reserve(n);
+    std::vector<ClusterTable> cts2;
+    cts2.reserve(m);
+
+    for (size_t i = 0; i < n; i++) {
+        cts1.emplace_back(g1, psws1[i]);
+    }
+
+    for (size_t i = 0; i < m; i++) {
+        cts2.emplace_back(g2, psws2[i]);
+    }
+
     std::vector<std::vector<cost>> costMatrix(size, std::vector<cost>(size, 0.0));
 
     uint64_t sumMinDist = 0;
     for (size_t i = 0; i < n; i++) {
         uint64_t minDist = UINT64_MAX;
-        ClusterTable ct(g1, psws1[i]);
 
         for (size_t j = 0; j < m; j++) {
-            uint64_t dist = rfDist(ct, g2, psws2[j]);
+            uint64_t dist = rfDist(cts1[i], cts2[j], g2, psws2[j]);
 
             costMatrix[i][j] = static_cast<cost>(dist);
 
@@ -117,6 +128,14 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
 
         sumMinDist += minDist;
     }
+
+    /* for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < m; j++) {
+            std::cout << costMatrix[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    std::exit(0); */
 
     std::vector<col> rowSol(size);
     std::vector<row> colSol(size);
