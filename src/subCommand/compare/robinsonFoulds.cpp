@@ -60,19 +60,9 @@ static uint64_t rfDist(
         }
     }
 
-    uint64_t size1 = 0;
-    for (const auto &l : ct.ct) {
-        size1 += l.second.size();
-    }
-
     ClusterTable ct2(g2, psw2);
-    uint64_t size2 = 0;
-    for (const auto &l : ct2.ct) {
-        size2 += l.second.size();
-    }
 
-
-    return (size1 + size2 - 2 * commonClusters) / 2;
+    return (ct.size + ct2.size - 2 * commonClusters);
 }
 
 void robinsonFoulds(const Graph &g1, const Graph &g2) {
