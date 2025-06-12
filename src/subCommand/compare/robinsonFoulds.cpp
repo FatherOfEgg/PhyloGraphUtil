@@ -42,7 +42,7 @@ static void printNonTrivialClusters(
     std::cout << ", max: " << maxCluster;
     std::cout << ", avg: " << sumCluster / cts.size() << std::endl;
 
-    std::cout << "Considering every contained subtree: " << sumCluster << std::endl;
+    std::cout << "total (considering every contained subtree): " << sumCluster << std::endl;
 }
 
 // COMCLUST
