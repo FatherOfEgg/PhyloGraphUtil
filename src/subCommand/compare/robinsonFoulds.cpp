@@ -16,6 +16,39 @@
 #include "util/lap.h"
 #include "util/psw.h"
 
+static void printBipartiteStats(
+    const std::vector<std::vector<cost>> &costMatrix,
+    const std::vector<std::vector<uint64_t>> &similarity,
+    const std::vector<col> &rowSol
+) {
+    uint64_t min = costMatrix[0][rowSol[0]];
+    uint64_t max = costMatrix[0][rowSol[0]];
+    double total = costMatrix[0][rowSol[0]];
+    double similarityTotal = similarity[0][rowSol[0]];
+
+    for (size_t i = 1; i < rowSol.size(); i++) {
+        cost dissimilarity = costMatrix[i][rowSol[i]];
+
+        if (dissimilarity < min) {
+            min = dissimilarity;
+        }
+        if (dissimilarity > max) {
+            max= dissimilarity;
+        }
+
+        total += dissimilarity;
+        similarityTotal += similarity[i][rowSol[i]];
+    }
+
+    std::cout << total / (total + similarityTotal) * 100.0 << "% difference" << std::endl;
+
+    std::cout << "min: " << min;
+    std::cout << ", max: " << max;
+    std::cout << ", avg: " << total / rowSol.size() << std::endl;
+
+    std::cout << "Total RF dist: " << total << std::endl;
+}
+
 static void printClusterStats(
     const Graph &g,
     std::vector<ClusterTable> cts
@@ -142,6 +175,7 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     }
 
     std::vector<std::vector<cost>> costMatrix(size, std::vector<cost>(size, 0.0));
+    std::vector<std::vector<uint64_t>> similarity(n, std::vector<uint64_t>(m));
 
     uint64_t sumMinDist = 0;
     for (size_t i = 0; i < n; i++) {
@@ -152,6 +186,7 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
             uint64_t dist = p.first;
 
             costMatrix[i][j] = static_cast<cost>(dist);
+            similarity[i][j] = p.second;
 
             if (dist < minDist) {
                 minDist = dist;
@@ -174,15 +209,10 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     std::vector<cost> u(size);
     std::vector<cost> v(size);
 
-    cost c = lap(size, costMatrix, rowSol, colSol, u, v);
-
-    size_t numLeaves = g1.leaves.size();
-    double maxRFDist = (2 * (numLeaves - 2)) * size;
+    lap(size, costMatrix, rowSol, colSol, u, v);
 
     std::cout << "===Bipartite matching===" << std::endl;
-    std::cout << c / maxRFDist * 100.0 << "% difference " << std::endl;
-    std::cout << "Total RF dist: " << c << std::endl;
-
+    printBipartiteStats(costMatrix, similarity, rowSol);
     std::cout << std::endl;
 
     std::cout << "===Sum of the smallest RF distances===" << std::endl;
