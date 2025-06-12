@@ -140,6 +140,52 @@ static void pruneGraph(
 
         completed.insert(*p.second);
     }
+
+    // Fix/reduce the reticulations themselves if need be
+    for (const auto &p : curEdges) {
+        if (completed.find(p.first) != completed.end()) {
+            continue;
+        }
+
+        uint64_t targetNode = p.first;
+
+        while (adjList[targetNode].size() == 1) {
+            targetNode = adjList[targetNode][0];
+
+            if (curEdges.find(targetNode) != curEdges.end()) {
+                completed.insert(targetNode);
+            }
+        }
+
+        uint64_t curNode = p.first;
+        uint64_t prevNode;
+
+        do {
+            prevNode = curNode;
+            std::unordered_set<uint64_t> parent = parents.at(curNode);
+
+            if (parent.size() == 2) {
+                uint64_t ignoreNode = *curEdges.at(curNode);
+                completed.insert(curNode);
+
+                for (const uint64_t &e : parent) {
+                    if (e != ignoreNode) {
+                        curNode = e;
+                        break;
+                    }
+                }
+            } else {
+                curNode = *parent.begin();
+            }
+            /* if (parents.at(curNode).size() >= 3) {
+                continue;
+            } */
+        } while (adjList[curNode].size() == 1);
+
+        auto it = std::find(adjList[curNode].begin(), adjList[curNode].end(), prevNode);
+        *it = targetNode;
+
+        completed.insert(p.first);
     }
 }
 
