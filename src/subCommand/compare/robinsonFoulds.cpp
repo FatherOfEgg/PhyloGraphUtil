@@ -33,7 +33,7 @@ static void printBipartiteStats(
             min = dissimilarity;
         }
         if (dissimilarity > max) {
-            max= dissimilarity;
+            max = dissimilarity;
         }
 
         total += dissimilarity;
@@ -45,6 +45,38 @@ static void printBipartiteStats(
     std::cout << "min: " << min;
     std::cout << ", max: " << max;
     std::cout << ", avg: " << total / rowSol.size() << std::endl;
+
+    std::cout << "Total RF dist: " << total << std::endl;
+}
+
+static void printSmallestSumStats(
+    const std::vector<uint64_t> &minDissimilarity,
+    const std::vector<uint64_t> &minSimilarity
+) {
+    uint64_t min = minDissimilarity[0];
+    uint64_t max = minDissimilarity[0];
+    double total = minDissimilarity[0];
+    double similarityTotal = minSimilarity[0];
+
+    for (size_t i = 1; i < minDissimilarity.size(); i++) {
+        cost dissimilarity = minDissimilarity[i];
+
+        if (dissimilarity < min) {
+            min = dissimilarity;
+        }
+        if (dissimilarity > max) {
+            max = dissimilarity;
+        }
+
+        total += dissimilarity;
+        similarityTotal += minSimilarity[i];
+    }
+
+    std::cout << total / (total + similarityTotal) * 100.0 << "% difference" << std::endl;
+
+    std::cout << "min: " << min;
+    std::cout << ", max: " << max;
+    std::cout << ", avg: " << total / minDissimilarity.size() << std::endl;
 
     std::cout << "Total RF dist: " << total << std::endl;
 }
@@ -177,32 +209,32 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     std::vector<std::vector<cost>> costMatrix(size, std::vector<cost>(size, 0.0));
     std::vector<std::vector<uint64_t>> similarity(n, std::vector<uint64_t>(m));
 
-    uint64_t sumMinDist = 0;
+    std::vector<uint64_t> minDissimilarity;
+    minDissimilarity.reserve(n);
+    std::vector<uint64_t> minSimilarity;
+    minSimilarity.reserve(n);
+
     for (size_t i = 0; i < n; i++) {
         uint64_t minDist = UINT64_MAX;
+        uint64_t minSim = 0;
 
         for (size_t j = 0; j < m; j++) {
             auto p = rfDist(cts1[i], cts2[j], g2, psws2[j]);
             uint64_t dist = p.first;
+            uint64_t sim = p.second;
 
             costMatrix[i][j] = static_cast<cost>(dist);
-            similarity[i][j] = p.second;
+            similarity[i][j] = sim;
 
             if (dist < minDist) {
                 minDist = dist;
+                minSim = sim;
             }
         }
 
-        sumMinDist += minDist;
+        minDissimilarity.push_back(minDist);
+        minSimilarity.push_back(minSim);
     }
-
-    /* for (size_t i = 0; i < n; i++) {
-        for (size_t j = 0; j < m; j++) {
-            std::cout << costMatrix[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-    std::exit(0); */
 
     std::vector<col> rowSol(size);
     std::vector<row> colSol(size);
@@ -215,10 +247,8 @@ void robinsonFoulds(const Graph &g1, const Graph &g2) {
     printBipartiteStats(costMatrix, similarity, rowSol);
     std::cout << std::endl;
 
-    std::cout << "===Sum of the smallest RF distances===" << std::endl;
-    std::cout << (static_cast<double>(sumMinDist) / maxRFDist) * 100.0 << "% difference" << std::endl;
-    std::cout << "Total RF dist: " << sumMinDist << std::endl;
-
+    std::cout << "===Sum of the smallest===" << std::endl;
+    printSmallestSumStats(minDissimilarity, minSimilarity);
     std::cout << std::endl;
 
     std::cout << "===Non-trivial clades/clusters===" << std::endl;
