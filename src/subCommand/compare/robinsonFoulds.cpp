@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+// #include <iomanip>
 #include <iostream>
 #include <stack>
 #include <string>
@@ -42,11 +43,34 @@ static void printBipartiteStats(
 
     std::cout << total / (total + similarityTotal) * 100.0 << "% difference" << std::endl;
 
-    std::cout << "min: " << min;
+    std::cout << "RF Distance" << std::endl;
+    std::cout << "total: " << total;
+    std::cout << ", min: " << min;
     std::cout << ", max: " << max;
     std::cout << ", avg: " << total / rowSol.size() << std::endl;
 
-    std::cout << "Total RF dist: " << total << std::endl;
+    /* int width1 = 5;
+    int width2 = 7;
+
+    std::cout << "RF Distance" << std::endl;
+
+    std::cout << std::right;
+    std::cout << std::setw(width1) << "min";
+    std::cout << std::setw(width1) << "max";
+    std::cout << std::setw(width1) << "avg";
+    std::cout << std::setw(width2) << "total" << std::endl;
+
+    std::cout << std::setfill('-');
+    std::cout << std::setw(width1) << "";
+    std::cout << std::setw(width1) << "";
+    std::cout << std::setw(width1) << "";
+    std::cout << std::setw(width2) << "" << std::endl;
+
+    std::cout << std::setfill(' ');
+    std::cout << std::setw(width1) << min;
+    std::cout << std::setw(width1) << max;
+    std::cout << std::setw(width1) << total / rowSol.size();
+    std::cout << std::setw(width2) << total << std::endl; */
 }
 
 static void printSmallestSumStats(
@@ -74,11 +98,12 @@ static void printSmallestSumStats(
 
     std::cout << total / (total + similarityTotal) * 100.0 << "% difference" << std::endl;
 
-    std::cout << "min: " << min;
+    std::cout << "RF Distance" << std::endl;
+    std::cout << "total: " << total;
+    std::cout << ", min: " << min;
     std::cout << ", max: " << max;
     std::cout << ", avg: " << total / minDissimilarity.size() << std::endl;
 
-    std::cout << "Total RF dist: " << total << std::endl;
 }
 
 static void printClusterStats(
@@ -103,11 +128,10 @@ static void printClusterStats(
 
     std::cout << g.filename << ":" << std::endl;
 
+    std::cout << "total (considering every contained subtree): " << sumCluster << std::endl;
     std::cout << "min: " << minCluster;
     std::cout << ", max: " << maxCluster;
     std::cout << ", avg: " << sumCluster / cts.size() << std::endl;
-
-    std::cout << "total (considering every contained subtree): " << sumCluster << std::endl;
 }
 
 // COMCLUST
